@@ -1,4 +1,3 @@
-<!-- Encabezado y estilos -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,58 +27,62 @@
 </head>
 <body>
 
-<h1>🧪 PoC CORS Toolkit — Full Suite</h1>
+  <h1>🧪 PoC CORS Toolkit — Full Suite</h1>
 
-<label>📌 Objetivo (endpoint CORS):</label>
-<input type="text" id="target" value="https://example.com" oninput="updateOrigins()" />
+  <label>📌 Objetivo (endpoint CORS):</label>
+  <input type="text" id="target" value="https://example.com" oninput="updateOrigins()" />
 
-<label>🎭 Payload Origin (basado en dominio de arriba):</label>
-<select id="origin"></select>
+  <label>🎭 Payload Origin (basado en dominio de arriba):</label>
+  <select id="origin"></select>
 
-<label>🔁 Método:</label>
-<select id="method">
-  <option value="GET">GET</option>
-  <option value="POST">POST</option>
-</select>
+  <label>🔁 Método:</label>
+  <select id="method">
+    <option value="GET">GET</option>
+    <option value="POST">POST</option>
+  </select>
 
-<label>🔐 Authorization (opcional):</label>
-<input type="text" id="auth" value="Bearer fake-token" />
+  <label>🔐 Authorization (opcional):</label>
+  <input type="text" id="auth" value="Bearer fake-token" />
 
-<label>📦 Body (solo POST):</label>
-<textarea id="body">{"test":"cors+payload"}</textarea>
+  <label>📦 Body (solo POST):</label>
+  <textarea id="body">{"test":"cors+payload"}</textarea>
 
-<label>📄 Cargar lista de URLs (opcional):</label>
-<textarea id="urlList" placeholder="https://example.com\nhttps://sub.example.com"></textarea>
+  <label>📄 Cargar lista de URLs (opcional):</label>
+  <textarea id="urlList" placeholder="https://example.com\nhttps://sub.example.com"></textarea>
 
-<button onclick="testCORS()">🚀 Ejecutar prueba individual</button>
-<button onclick="testMultiple()">🧪 Probar lista de URLs</button>
-<button onclick="downloadResults()">💾 Exportar resultados</button>
+  <button onclick="testCORS()">🚀 Ejecutar prueba individual</button>
+  <button onclick="testMultiple()">🧪 Probar lista de URLs</button>
+  <button onclick="downloadResults()">💾 Exportar resultados</button>
 
-<h2>📋 Resultado:</h2>
-<pre id="output">Esperando prueba...</pre>
+  <h2>📋 Resultado:</h2>
+  <pre id="output">Esperando prueba...</pre>
 
 <script>
   const results = [];
 
   function updateOrigins() {
     const base = document.getElementById('target').value.trim();
-    const baseHost = new URL(base).hostname;
-    const select = document.getElementById('origin');
-    select.innerHTML = '';
-    const payloads = [
-      `https://evil.com`,
-      `null`,
-      `https://${baseHost}.attacker.com`,
-      `https://sub.${baseHost}`,
-      `https://${baseHost}.`,
-      `file://`,
-      `data:text/html`
-    ];
-    for (const p of payloads) {
-      const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
-      select.appendChild(opt);
+    try {
+      const baseHost = new URL(base).hostname;
+      const select = document.getElementById('origin');
+      select.innerHTML = '';
+      const payloads = [
+        `https://evil.com`,
+        `null`,
+        `https://${baseHost}.attacker.com`,
+        `https://sub.${baseHost}`,
+        `https://${baseHost}.`,
+        `file://`,
+        `data:text/html`
+      ];
+      for (const p of payloads) {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        select.appendChild(opt);
+      }
+    } catch (e) {
+      console.warn("URL inválida para generar payloads Origin");
     }
   }
 
@@ -127,20 +130,25 @@
   }
 
   async function testCORS() {
-    const url = document.getElementById('target').value;
-    const origin = document.getElementById('origin').value;
-    const method = document.getElementById('method').value;
-    const auth = document.getElementById('auth').value;
-    const body = document.getElementById('body').value;
-    const output = document.getElementById('output');
+    try {
+      const url = document.getElementById('target').value;
+      const origin = document.getElementById('origin').value;
+      const method = document.getElementById('method').value;
+      const auth = document.getElementById('auth').value;
+      const body = document.getElementById('body').value;
+      const output = document.getElementById('output');
 
-    output.innerText = "Cargando...\n\n";
-    const result = await doFetch(url, origin, method, auth, body);
-    output.innerText = result;
+      output.innerText = "Cargando...\n\n";
+      const result = await doFetch(url, origin, method, auth, body);
+      output.innerText = result;
+    } catch (err) {
+      document.getElementById('output').innerText = `❌ ERROR al ejecutar prueba individual:\n${err}`;
+    }
   }
 
   async function testMultiple() {
-    const urls = document.getElementById('urlList').value.trim().split(/\s+/);
+    const raw = document.getElementById('urlList').value;
+    const urls = raw.split(/\r?\n|\\n/).map(u => u.trim()).filter(Boolean);
     const origin = document.getElementById('origin').value;
     const method = document.getElementById('method').value;
     const auth = document.getElementById('auth').value;
@@ -149,7 +157,14 @@
     output.innerText = "Ejecutando múltiples pruebas...\n\n";
     results.length = 0;
     for (const url of urls) {
-      output.innerText += await doFetch(url, origin, method, auth, body);
+      try {
+        const result = await doFetch(url, origin, method, auth, body);
+        output.innerText += result;
+      } catch (err) {
+        const fail = `❌ ${url}\nERROR: ${err}\n============================\n`;
+        results.push(fail);
+        output.innerText += fail;
+      }
     }
   }
 
@@ -161,9 +176,9 @@
     link.click();
   }
 
-  // Inicializa origin al cargar
   window.onload = updateOrigins;
 </script>
 
 </body>
 </html>
+
