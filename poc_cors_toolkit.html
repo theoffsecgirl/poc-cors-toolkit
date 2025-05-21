@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PoC CORS Toolkit — Full Suite</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #111;
+      color: #0f0;
+      padding: 20px;
+    }
+    input, select, button, textarea {
+      background: #222;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 6px;
+      margin: 4px 0;
+      width: 100%;
+    }
+    pre {
+      background: #000;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧪 PoC CORS Toolkit — Full Suite</h1>
+
+  <label>📌 Objetivo (endpoint CORS):</label>
+  <input type="text" id="target" value="https://example.com" />
+
+  <label>🎭 Payload Origin:</label>
+  <select id="origin">
+    <option value="https://evil.com">https://evil.com</option>
+    <option value="null">null</option>
+    <option value="https://example.com.attacker.com">example.com.attacker.com</option>
+    <option value="https://sub.example.com">sub.example.com</option>
+    <option value="https://example.com.">example.com.</option>
+  </select>
+
+  <label>🔁 Método:</label>
+  <select id="method">
+    <option value="GET">GET</option>
+    <option value="POST">POST</option>
+  </select>
+
+  <label>🔐 Authorization (opcional):</label>
+  <input type="text" id="auth" value="Bearer fake-token" />
+
+  <label>📦 Body (solo POST):</label>
+  <textarea id="body">{"test":"cors+payload"}</textarea>
+
+  <label>📄 Cargar lista de URLs (opcional):</label>
+  <textarea id="urlList" placeholder="https://example.com\nhttps://sub.example.com"></textarea>
+
+  <button onclick="testCORS()">🚀 Ejecutar prueba individual</button>
+  <button onclick="testMultiple()">🧪 Probar lista de URLs</button>
+  <button onclick="downloadResults()">💾 Exportar resultados</button>
+
+  <h2>📋 Resultado:</h2>
+  <pre id="output">Esperando prueba...</pre>
+
+  <script>
+    const results = [];
+
+    async function doFetch(url, origin, method, auth, body) {
+      const headers = {
+        "Content-Type": "application/json"
+      };
+      if (auth) headers["Authorization"] = auth;
+
+      const options = {
+        method,
+        headers,
+        credentials: "include",
+        redirect: "follow",
+        mode: "cors"
+      };
+      if (method === "POST") {
+        try {
+          options.body = JSON.stringify(JSON.parse(body));
+        } catch {
+          return `❌ ERROR: Body JSON inválido.`;
+        }
+      }
+
+      try {
+        const res = await fetch(url, options);
+        let headersText = "";
+        for (const [key, value] of res.headers.entries()) {
+          headersText += `${key}: ${value}\n`;
+        }
+        const bodyText = await res.text();
+        const result =
+`✅ ${url}
+🌐 Origin: ${origin}
+🔁 Redirigido: ${res.redirected}
+📦 Estado: ${res.status}
+🧾 HEADERS:\n${headersText}\n📦 BODY:\n${bodyText}\n\n============================\n`;
+        results.push(result);
+        return result;
+      } catch (err) {
+        const errResult = `❌ ${url}\n🌐 Origin: ${origin}\nError: ${err}\n============================\n`;
+        results.push(errResult);
+        return errResult;
+      }
+    }
+
+    async function testCORS() {
+      const url = document.getElementById('target').value;
+      const origin = document.getElementById('origin').value;
+      const method = document.getElementById('method').value;
+      const auth = document.getElementById('auth').value;
+      const body = document.getElementById('body').value;
+      const output = document.getElementById('output');
+
+      output.innerText = "Cargando...\n\n";
+      const result = await doFetch(url, origin, method, auth, body);
+      output.innerText = result;
+    }
+
+    async function testMultiple() {
+      const urls = document.getElementById('urlList').value.trim().split(/\s+/);
+      const origin = document.getElementById('origin').value;
+      const method = document.getElementById('method').value;
+      const auth = document.getElementById('auth').value;
+      const body = document.getElementById('body').value;
+      const output = document.getElementById('output');
+      output.innerText = "Ejecutando múltiples pruebas...\n\n";
+      results.length = 0;
+      for (const url of urls) {
+        output.innerText += await doFetch(url, origin, method, auth, body);
+      }
+    }
+
+    function downloadResults() {
+      const blob = new Blob([results.join('\n')], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'cors_results.txt';
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
