@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CORS Toolkit</title>
+  <style>
+    :root {
+      --bg: #0B0B0B;
+      --panel: #141414;
+      --border: #2A2A2A;
+      --text: #E5E5E5;
+      --accent: #9E4AFF;
+      --accent-hover: #7B2FCC;
+      --radius: 8px;
+      --font: Inter, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 32px;
+      font-family: var(--font);
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+    }
+
+    h1 {
+      color: var(--accent);
+      font-size: 1.9rem;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    h2 {
+      color: var(--accent);
+      font-size: 1.2rem;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .section {
+      background: var(--panel);
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    button {
+      background: var(--accent);
+      border: none;
+      padding: 12px 18px;
+      color: white;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: 0.15s;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    pre {
+      background: #111;
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>CORS Toolkit</h1>
+
+  <div class="section">
+    <label>URL objetivo</label>
+    <input type="text" id="target" value="https://example.com" oninput="updateOrigins()">
+
+    <label>Origin para la prueba</label>
+    <select id="origin"></select>
+
+    <label>Método</label>
+    <select id="method">
+      <option value="GET">GET</option>
+      <option value="POST">POST</option>
+    </select>
+
+    <label>Authorization (opcional)</label>
+    <input type="text" id="auth" placeholder="Bearer token">
+
+    <label>Body para POST</label>
+    <textarea id="body">{ "test": "cors" }</textarea>
+
+    <label>Lista de URLs (una por línea)</label>
+    <textarea id="urlList" placeholder="https://example.com
+https://sub.example.com"></textarea>
+
+    <button onclick="testCORS()">Prueba individual</button>
+    <button onclick="testMultiple()">Probar lista</button>
+    <button onclick="downloadResults()">Exportar resultados</button>
+  </div>
+
+  <h2>Salida</h2>
+  <div class="section">
+    <pre id="output">Esperando prueba…</pre>
+  </div>
+
+</div>
+
+<script>
+  const results = [];
+
+  function updateOrigins() {
+    const base = document.getElementById('target').value.trim();
+    try {
+      const host = new URL(base).hostname;
+      const o = document.getElementById('origin');
+      o.innerHTML = '';
+      [
+        "https://evil.com",
+        "null",
+        `https://${host}.attacker.com`,
+        `https://sub.${host}`,
+        `https://${host}.`,
+        "file://",
+        "data:text/html"
+      ].forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        o.appendChild(opt);
+      });
+    } catch (e) {}
+  }
+
+  async function doFetch(url, origin, method, auth, body) {
+    const headers = {"Content-Type": "application/json", "Origin": origin};
+    if (auth) headers["Authorization"] = auth;
+
+    const opts = { method, headers, credentials: "include", mode: "cors" };
+    if (method === "POST") {
+      try { opts.body = JSON.stringify(JSON.parse(body)); }
+      catch { return `Body JSON inválido.\n---\n`; }
+    }
+
+    try {
+      const res = await fetch(url, opts);
+      const headerDump = [...res.headers.entries()].map(e => `${e[0]}: ${e[1]}`).join("\n");
+      const text = await res.text();
+      const r =
+`${url}
+Origin: ${origin}
+Status: ${res.status}
+
+Headers:
+${headerDump}
+
+Body:
+${text}
+---
+`;
+      results.push(r);
+      return r;
+    } catch (err) {
+      const fail = `${url}\nError: ${err}\n---\n`;
+      results.push(fail);
+      return fail;
+    }
+  }
+
+  async function testCORS() {
+    document.getElementById('output').innerText = "Ejecutando…";
+    const r = await doFetch(
+      document.getElementById('target').value,
+      document.getElementById('origin').value,
+      document.getElementById('method').value,
+      document.getElementById('auth').value,
+      document.getElementById('body').value
+    );
+    document.getElementById('output').innerText = r;
+  }
+
+  async function testMultiple() {
+    const urls = document.getElementById('urlList').value.split(/\n/).map(x => x.trim()).filter(Boolean);
+    const origin = document.getElementById('origin').value;
+    const method = document.getElementById('method').value;
+    const auth = document.getElementById('auth').value;
+    const body = document.getElementById('body').value;
+
+    const out = document.getElementById('output');
+    out.innerText = "Ejecutando pruebas…\n";
+    results.length = 0;
+
+    for (const url of urls) {
+      out.innerText += await doFetch(url, origin, method, auth, body);
+    }
+  }
+
+  function downloadResults() {
+    const blob = new Blob([results.join("\n")], {type:"text/plain"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "cors_results.txt";
+    a.click();
+  }
+
+  window.onload = updateOrigins;
+</script>
+
+</body>
+</html>
