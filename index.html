@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORS Toolkit v2.0 - Advanced CORS Misconfiguration Tester</title>
+  <style>
+    :root {
+      --bg: #0B0B0B;
+      --panel: #141414;
+      --border: #2A2A2A;
+      --text: #E5E5E5;
+      --text-dim: #999;
+      --accent: #9E4AFF;
+      --accent-hover: #7B2FCC;
+      --success: #00D67A;
+      --warning: #FFB800;
+      --danger: #FF4747;
+      --radius: 8px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+    }
+
+    h1 {
+      color: var(--accent);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+    }
+
+    h2 {
+      color: var(--accent);
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .section {
+      background: var(--panel);
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: var(--font);
+      transition: border-color 0.15s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      background: var(--accent);
+      border: none;
+      padding: 12px 20px;
+      color: white;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    button.secondary:hover {
+      background: #333;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .output-container {
+      position: relative;
+    }
+
+    pre {
+      background: #0A0A0A;
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .status-success { background: var(--success); color: #000; }
+    .status-warning { background: var(--warning); color: #000; }
+    .status-danger { background: var(--danger); color: #fff; }
+
+    .vuln-highlight {
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    .info-box {
+      background: rgba(158, 74, 255, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .info-box ul {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+
+    .info-box li {
+      margin-bottom: 4px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .btn-group {
+        flex-direction: column;
+      }
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🔒 CORS Toolkit v2.0</h1>
+    <p class="subtitle">Advanced CORS Misconfiguration Detection & Testing</p>
+  </header>
+
+  <div class="info-box">
+    <strong>📋 Qué detecta esta herramienta:</strong>
+    <ul>
+      <li>Reflejo dinámico de Origin (vulnerable)</li>
+      <li>Wildcard misconfigurations (*)</li>
+      <li>Null origin acceptance</li>
+      <li>Subdomain trust issues</li>
+      <li>Credentials exposure (Access-Control-Allow-Credentials)</li>
+      <li>Insecure protocols (http, file, data)</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>⚙️ Configuración de Prueba</h2>
+    
+    <div class="grid">
+      <div>
+        <label>🎯 URL Objetivo</label>
+        <input type="text" id="target" value="https://api.example.com/endpoint" oninput="updateOrigins()" placeholder="https://api.target.com/endpoint">
+      </div>
+      
+      <div>
+        <label>🌐 Origin a Probar</label>
+        <select id="origin"></select>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>📡 Método HTTP</label>
+        <select id="method">
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+          <option value="PATCH">PATCH</option>
+        </select>
+      </div>
+      
+      <div>
+        <label>🔑 Authorization Header (opcional)</label>
+        <input type="text" id="auth" placeholder="Bearer eyJhbGc...">
+      </div>
+    </div>
+
+    <div>
+      <label>📝 Body para POST/PUT/PATCH (JSON)</label>
+      <textarea id="body" placeholder='{\n  "test": "cors",\n  "data": "sensitive"\n}'>{ "test": "cors" }</textarea>
+    </div>
+
+    <div>
+      <label>📋 Lista de URLs (una por línea)</label>
+      <textarea id="urlList" placeholder="https://api1.example.com/endpoint\nhttps://api2.example.com/data\nhttps://subdomain.target.com/api"></textarea>
+    </div>
+
+    <div class="btn-group">
+      <button onclick="testCORS()">▶️ Prueba Individual</button>
+      <button onclick="testMultiple()">🔄 Probar Lista Completa</button>
+      <button onclick="testAllOrigins()" class="secondary">🎯 Probar Todos los Origins</button>
+      <button onclick="clearOutput()" class="secondary">🗑️ Limpiar</button>
+      <button onclick="downloadResults()">💾 Exportar Resultados</button>
+      <button onclick="copyToClipboard()" class="secondary">📋 Copiar Output</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Resultados</h2>
+    <div id="progressContainer" style="display: none;">
+      <div class="progress">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+      <p id="progressText" style="font-size: 13px; color: var(--text-dim); margin-bottom: 16px;"></p>
+    </div>
+    <div class="output-container">
+      <pre id="output">⏳ Esperando prueba...</pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const results = [];
+  let testCount = 0;
+
+  function updateOrigins() {
+    const base = document.getElementById('target').value.trim();
+    try {
+      const url = new URL(base);
+      const host = url.hostname;
+      const protocol = url.protocol.replace(':', '');
+      
+      const o = document.getElementById('origin');
+      o.innerHTML = '';
+      
+      const origins = [
+        { value: "https://evil.com", label: "https://evil.com (External attacker)" },
+        { value: "null", label: "null (Null origin bypass)" },
+        { value: `${protocol}://${host}`, label: `${protocol}://${host} (Same origin)` },
+        { value: `https://${host}.attacker.com`, label: `https://${host}.attacker.com (Subdomain prefix)` },
+        { value: `https://attacker.${host}`, label: `https://attacker.${host} (Subdomain injection)` },
+        { value: `https://sub.${host}`, label: `https://sub.${host} (Subdomain trust)` },
+        { value: `http://${host}`, label: `http://${host} (Protocol downgrade)` },
+        { value: `${protocol}://${host}:8080`, label: `${protocol}://${host}:8080 (Port variation)` },
+        { value: "file://", label: "file:// (File protocol)" },
+        { value: "data:text/html", label: "data:text/html (Data URI)" },
+      ];
+      
+      origins.forEach(orig => {
+        const opt = document.createElement('option');
+        opt.value = orig.value;
+        opt.textContent = orig.label;
+        o.appendChild(opt);
+      });
+    } catch (e) {
+      console.error('Invalid URL:', e);
+    }
+  }
+
+  function analyzeVulnerability(url, origin, headers, status) {
+    const acaoHeader = headers['access-control-allow-origin'];
+    const acacHeader = headers['access-control-allow-credentials'];
+    
+    let vulns = [];
+    
+    if (acaoHeader === origin && origin !== url) {
+      vulns.push("🚨 VULNERABLE: Origin reflejado dinámicamente");
+    }
+    
+    if (acaoHeader === '*') {
+      vulns.push("⚠️ VULNERABLE: Wildcard (*) permitido");
+    }
+    
+    if (acaoHeader === 'null') {
+      vulns.push("🚨 VULNERABLE: Null origin aceptado");
+    }
+    
+    if (acacHeader === 'true' && acaoHeader && acaoHeader !== url) {
+      vulns.push("🔥 CRITICAL: Credentials + Origin reflection (data exfiltration possible)");
+    }
+    
+    if (origin.startsWith('file://') && acaoHeader === origin) {
+      vulns.push("🚨 VULNERABLE: File protocol accepted");
+    }
+    
+    if (origin.startsWith('data:') && acaoHeader === origin) {
+      vulns.push("🚨 VULNERABLE: Data URI accepted");
+    }
+    
+    return vulns;
+  }
+
+  async function doFetch(url, origin, method, auth, body) {
+    const headers = {
+      "Content-Type": "application/json",
+      "Origin": origin
+    };
+    
+    if (auth && auth.trim()) {
+      headers["Authorization"] = auth.trim();
+    }
+
+    const opts = { 
+      method, 
+      headers, 
+      credentials: "include", 
+      mode: "cors"
+    };
+    
+    if (["POST", "PUT", "PATCH"].includes(method)) {
+      try { 
+        opts.body = JSON.stringify(JSON.parse(body)); 
+      } catch { 
+        return `❌ Body JSON inválido\n${"-".repeat(60)}\n`; 
+      }
+    }
+
+    try {
+      const res = await fetch(url, opts);
+      const responseHeaders = {};
+      res.headers.forEach((value, key) => {
+        responseHeaders[key.toLowerCase()] = value;
+      });
+      
+      const headerDump = Object.entries(responseHeaders)
+        .map(([k, v]) => `  ${k}: ${v}`)
+        .join("\n");
+      
+      const vulns = analyzeVulnerability(url, origin, responseHeaders, res.status);
+      
+      let text = '';
+      try {
+        text = await res.text();
+      } catch {
+        text = '[No se pudo leer el body]';
+      }
+      
+      const truncatedBody = text.length > 500 ? text.substring(0, 500) + '...\n[truncado]' : text;
+      
+      const result = `
+╭${"-".repeat(58)}╮
+│ 🎯 URL: ${url}
+│ 🌐 Origin: ${origin}
+│ 📡 Method: ${method}
+│ 📊 Status: ${res.status}
+╰${"-".repeat(58)}╯
+
+${vulns.length > 0 ? `🚨 VULNERABILITIES DETECTED:\n${vulns.map(v => `  ${v}`).join('\n')}\n\n` : '✅ No CORS misconfiguration detected\n\n'}📋 Response Headers:
+${headerDump}
+
+📝 Response Body:
+${truncatedBody}
+
+${"-".repeat(60)}
+`;
+      
+      results.push(result);
+      return result;
+    } catch (err) {
+      const fail = `
+╭${"-".repeat(58)}╮
+│ ❌ ERROR
+│ 🎯 URL: ${url}
+│ 🌐 Origin: ${origin}
+╰${"-".repeat(58)}╯
+
+⚠️ Error: ${err.message}
+
+${"-".repeat(60)}
+`;
+      results.push(fail);
+      return fail;
+    }
+  }
+
+  async function testCORS() {
+    document.getElementById('output').innerText = "⏳ Ejecutando prueba...";
+    const r = await doFetch(
+      document.getElementById('target').value,
+      document.getElementById('origin').value,
+      document.getElementById('method').value,
+      document.getElementById('auth').value,
+      document.getElementById('body').value
+    );
+    document.getElementById('output').innerText = r;
+  }
+
+  async function testMultiple() {
+    const urls = document.getElementById('urlList').value
+      .split(/\n/)
+      .map(x => x.trim())
+      .filter(Boolean);
+    
+    if (urls.length === 0) {
+      document.getElementById('output').innerText = "⚠️ No se proporcionaron URLs";
+      return;
+    }
+    
+    const origin = document.getElementById('origin').value;
+    const method = document.getElementById('method').value;
+    const auth = document.getElementById('auth').value;
+    const body = document.getElementById('body').value;
+
+    const out = document.getElementById('output');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    progressContainer.style.display = 'block';
+    out.innerText = "⏳ Ejecutando pruebas múltiples...\n\n";
+    results.length = 0;
+    testCount = 0;
+
+    for (let i = 0; i < urls.length; i++) {
+      const progress = ((i + 1) / urls.length) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressText.innerText = `Progreso: ${i + 1}/${urls.length} URLs testeadas`;
+      
+      out.innerText += await doFetch(urls[i], origin, method, auth, body);
+      testCount++;
+    }
+    
+    progressContainer.style.display = 'none';
+    out.innerText += `\n\n✅ Completado: ${testCount} pruebas realizadas`;
+  }
+
+  async function testAllOrigins() {
+    const url = document.getElementById('target').value;
+    const select = document.getElementById('origin');
+    const origins = Array.from(select.options).map(opt => opt.value);
+    
+    const method = document.getElementById('method').value;
+    const auth = document.getElementById('auth').value;
+    const body = document.getElementById('body').value;
+
+    const out = document.getElementById('output');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    progressContainer.style.display = 'block';
+    out.innerText = "⏳ Testeando todos los origins...\n\n";
+    results.length = 0;
+    testCount = 0;
+
+    for (let i = 0; i < origins.length; i++) {
+      const progress = ((i + 1) / origins.length) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressText.innerText = `Progreso: ${i + 1}/${origins.length} origins testeados`;
+      
+      out.innerText += await doFetch(url, origins[i], method, auth, body);
+      testCount++;
+    }
+    
+    progressContainer.style.display = 'none';
+    out.innerText += `\n\n✅ Completado: ${testCount} pruebas realizadas`;
+  }
+
+  function clearOutput() {
+    results.length = 0;
+    testCount = 0;
+    document.getElementById('output').innerText = "⏳ Esperando prueba...";
+    document.getElementById('progressContainer').style.display = 'none';
+  }
+
+  function downloadResults() {
+    if (results.length === 0) {
+      alert('No hay resultados para exportar');
+      return;
+    }
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const blob = new Blob([results.join("\n")], {type:"text/plain"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `cors_results_${timestamp}.txt`;
+    a.click();
+  }
+
+  function copyToClipboard() {
+    const output = document.getElementById('output').innerText;
+    navigator.clipboard.writeText(output).then(() => {
+      alert('✅ Copiado al portapapeles');
+    }).catch(() => {
+      alert('❌ Error al copiar');
+    });
+  }
+
+  window.onload = updateOrigins;
+</script>
+
+</body>
+</html>
