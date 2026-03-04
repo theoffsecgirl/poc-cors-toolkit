@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORS Toolkit v2.0 - Advanced CORS Misconfiguration Tester</title>
+  <style>
+    :root {
+      --bg: #0B0B0B;
+      --panel: #141414;
+      --border: #2A2A2A;
+      --text: #E5E5E5;
+      --text-muted: #8A8A8A;
+      --accent: #9E4AFF;
+      --accent-hover: #7B2FCC;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --radius: 8px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 32px;
+      font-family: var(--font);
+      display: flex;
+      justify-content: center;
+      line-height: 1.6;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    header {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      color: var(--accent);
+      font-size: 2rem;
+      margin: 0 0 8px 0;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    h2 {
+      color: var(--accent);
+      font-size: 1.3rem;
+      margin: 32px 0 16px 0;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .section {
+      background: var(--panel);
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+    }
+
+    .section.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .label-with-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .badge.new {
+      background: var(--accent);
+      color: white;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #0A0A0A;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      font-family: var(--font);
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: var(--accent);
+      border: none;
+      padding: 12px 20px;
+      color: white;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: #1F1F1F;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover {
+      background: #2A2A2A;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    pre {
+      background: #0A0A0A;
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      white-space: pre-wrap;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .vuln-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .vuln-badge.high {
+      background: var(--danger);
+      color: white;
+    }
+
+    .vuln-badge.medium {
+      background: var(--warning);
+      color: black;
+    }
+
+    .vuln-badge.low {
+      background: var(--success);
+      color: white;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: #0A0A0A;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .origin-preset {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #1A1A1A;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 4px 4px 4px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .origin-preset:hover {
+      background: #252525;
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🔓 CORS Toolkit v2.0</h1>
+    <p class="subtitle">Advanced CORS Misconfiguration Testing Suite</p>
+  </header>
+
+  <div class="grid">
+    <div class="section">
+      <div class="label-with-badge">
+        <label>URL Objetivo</label>
+        <span class="badge new">AUTO-DETECT</span>
+      </div>
+      <input type="text" id="target" value="https://api.example.com/data" placeholder="https://api.example.com/data">
+
+      <label>Método HTTP</label>
+      <select id="method">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="DELETE">DELETE</option>
+        <option value="PATCH">PATCH</option>
+        <option value="OPTIONS">OPTIONS</option>
+      </select>
+
+      <label>Origin para Prueba</label>
+      <select id="origin"></select>
+
+      <div class="label-with-badge">
+        <label>Custom Origins</label>
+        <span class="badge new">MULTI-TEST</span>
+      </div>
+      <div id="originPresets"></div>
+    </div>
+
+    <div class="section">
+      <label>Authorization Header (opcional)</label>
+      <input type="text" id="auth" placeholder="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+
+      <label>Custom Headers (JSON)</label>
+      <textarea id="customHeaders" placeholder='{
+  "X-API-Key": "abc123",
+  "X-Custom-Header": "value"
+}'>{}</textarea>
+
+      <label>Request Body (para POST/PUT/PATCH)</label>
+      <textarea id="body" placeholder='{
+  "test": "cors",
+  "action": "validate"
+}'>{ "test": "cors" }</textarea>
+    </div>
+  </div>
+
+  <div class="section full">
+    <label>Lista de URLs para Testing Masivo (una por línea)</label>
+    <textarea id="urlList" placeholder="https://api.example.com/users
+https://api.example.com/admin
+https://subdomain.example.com/api" style="min-height: 120px;"></textarea>
+
+    <div class="btn-group">
+      <button onclick="testSingle()">
+        <span>📡</span> Prueba Individual
+      </button>
+      <button onclick="testMultiple()">
+        <span>📊</span> Testing Masivo
+      </button>
+      <button onclick="testAllOrigins()">
+        <span>🎯</span> Test All Origins
+      </button>
+      <button onclick="clearResults()" class="secondary">
+        <span>🗑️</span> Limpiar
+      </button>
+      <button onclick="downloadResults()" class="secondary">
+        <span>💾</span> Exportar
+      </button>
+      <button onclick="downloadJSON()" class="secondary">
+        <span>📦</span> JSON
+      </button>
+    </div>
+  </div>
+
+  <h2>Resultados</h2>
+
+  <div class="stats" id="stats" style="display: none;">
+    <div class="stat-card">
+      <div class="stat-label">Requests</div>
+      <div class="stat-value" id="statRequests">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Vulnerables</div>
+      <div class="stat-value" id="statVulns" style="color: var(--danger);">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Errores</div>
+      <div class="stat-value" id="statErrors" style="color: var(--warning);">0</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <pre id="output">Esperando prueba…</pre>
+  </div>
+
+</div>
+
+<script>
+  const results = [];
+  const vulnerabilities = [];
+  let stats = { requests: 0, vulns: 0, errors: 0 };
+
+  // Enhanced origin payloads
+  const originPayloads = [
+    "https://evil.com",
+    "https://attacker.com",
+    "null",
+    "file://",
+    "data:text/html,<script>alert(1)</script>",
+  ];
+
+  function updateOriginPresets() {
+    const base = document.getElementById('target').value.trim();
+    if (!base) return;
+
+    try {
+      const url = new URL(base);
+      const host = url.hostname;
+      const protocol = url.protocol;
+
+      const dynamicOrigins = [
+        `${protocol}//${host}.attacker.com`,
+        `${protocol}//evil.${host}`,
+        `${protocol}//sub.${host}`,
+        `${protocol}//${host}.evil.com`,
+        `${protocol}//${host}`,
+        `${protocol}//${host}:8080`,
+      ];
+
+      const allOrigins = [...new Set([...originPayloads, ...dynamicOrigins])];
+      
+      // Update select
+      const select = document.getElementById('origin');
+      select.innerHTML = '';
+      allOrigins.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o;
+        opt.textContent = o;
+        select.appendChild(opt);
+      });
+
+      // Update presets
+      const container = document.getElementById('originPresets');
+      container.innerHTML = '';
+      allOrigins.slice(0, 10).forEach(o => {
+        const badge = document.createElement('span');
+        badge.className = 'origin-preset';
+        badge.textContent = o;
+        badge.onclick = () => {
+          document.getElementById('origin').value = o;
+        };
+        container.appendChild(badge);
+      });
+    } catch (e) {
+      console.error('Invalid URL:', e);
+    }
+  }
+
+  function analyzeVulnerability(url, origin, res, headerDump, text) {
+    const vulns = [];
+    const headers = Object.fromEntries(res.headers.entries());
+    
+    const acao = headers['access-control-allow-origin'];
+    const acac = headers['access-control-allow-credentials'];
+    
+    // Check for reflected origin
+    if (acao === origin && origin !== '*') {
+      vulns.push({
+        severity: 'high',
+        type: 'REFLECTED_ORIGIN',
+        description: `Origin ${origin} reflejado dinámicamente en ACAO`,
+        evidence: `Access-Control-Allow-Origin: ${acao}`,
+      });
+    }
+
+    // Check for wildcard with credentials
+    if (acao === '*' && acac === 'true') {
+      vulns.push({
+        severity: 'high',
+        type: 'WILDCARD_WITH_CREDENTIALS',
+        description: 'ACAO wildcard (*) con credentials habilitadas',
+        evidence: `ACAO: *, ACAC: true`,
+      });
+    }
+
+    // Check for null origin acceptance
+    if (acao === 'null') {
+      vulns.push({
+        severity: 'medium',
+        type: 'NULL_ORIGIN_ACCEPTED',
+        description: 'Origin null aceptado (explotable via sandbox iframe)',
+        evidence: `Access-Control-Allow-Origin: null`,
+      });
+    }
+
+    // Check for pre-domain wildcard
+    if (acao && acao.includes('*') && !acao.startsWith('*')) {
+      vulns.push({
+        severity: 'high',
+        type: 'PRE_DOMAIN_WILDCARD',
+        description: 'Wildcard en subdominio permite bypass',
+        evidence: `ACAO: ${acao}`,
+      });
+    }
+
+    // Check for insecure protocols
+    if (acao && (acao.startsWith('file://') || acao.startsWith('data:'))) {
+      vulns.push({
+        severity: 'medium',
+        type: 'INSECURE_PROTOCOL',
+        description: 'Protocolo inseguro aceptado en ACAO',
+        evidence: `ACAO: ${acao}`,
+      });
+    }
+
+    return vulns;
+  }
+
+  function formatVulnerabilities(vulns) {
+    if (vulns.length === 0) return '';
+
+    let output = '\n🚨 VULNERABILIDADES DETECTADAS:\n\n';
+    vulns.forEach(v => {
+      const badge = `[${v.severity.toUpperCase()}]`;
+      output += `${badge} ${v.type}\n`;
+      output += `    ${v.description}\n`;
+      output += `    Evidence: ${v.evidence}\n\n`;
+    });
+    return output;
+  }
+
+  async function doFetch(url, origin, method, auth, customHeaders, body) {
+    stats.requests++;
+    updateStats();
+
+    const headers = { "Origin": origin };
+    
+    // Add custom headers
+    try {
+      const custom = JSON.parse(customHeaders);
+      Object.assign(headers, custom);
+    } catch (e) {}
+
+    if (auth) headers["Authorization"] = auth;
+    if (method !== 'GET') headers["Content-Type"] = "application/json";
+
+    const opts = { method, headers, credentials: "include", mode: "cors" };
+    
+    if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+      try { 
+        opts.body = typeof body === 'string' ? body : JSON.stringify(body);
+      } catch { 
+        stats.errors++;
+        return `Body JSON inválido.\n---\n`; 
+      }
+    }
+
+    try {
+      const res = await fetch(url, opts);
+      const headerDump = [...res.headers.entries()].map(e => `  ${e[0]}: ${e[1]}`).join("\n");
+      const text = await res.text();
+      
+      // Analyze for vulnerabilities
+      const vulns = analyzeVulnerability(url, origin, res, headerDump, text);
+      if (vulns.length > 0) {
+        stats.vulns++;
+        vulnerabilities.push({ url, origin, vulns });
+      }
+
+      const vulnOutput = formatVulnerabilities(vulns);
+
+      const output = `
+╭${"─".repeat(60)}╮
+│ URL: ${url}
+│ Origin: ${origin}
+│ Método: ${method}
+│ Status: ${res.status}
+╰${"─".repeat(60)}╯
+
+Response Headers:
+${headerDump}
+
+${vulnOutput}Body Preview:
+${text.substring(0, 500)}${text.length > 500 ? '...' : ''}
+
+${"═".repeat(60)}
+`;
+      results.push({ url, origin, status: res.status, headers: Object.fromEntries(res.headers.entries()), body: text, vulns });
+      updateStats();
+      return output;
+    } catch (err) {
+      stats.errors++;
+      const fail = `
+✗ ERROR
+URL: ${url}
+Origin: ${origin}
+Error: ${err.message}
+
+${"═".repeat(60)}
+`;
+      results.push({ url, origin, error: err.message });
+      updateStats();
+      return fail;
+    }
+  }
+
+  function updateStats() {
+    document.getElementById('stats').style.display = 'flex';
+    document.getElementById('statRequests').textContent = stats.requests;
+    document.getElementById('statVulns').textContent = stats.vulns;
+    document.getElementById('statErrors').textContent = stats.errors;
+  }
+
+  async function testSingle() {
+    const output = document.getElementById('output');
+    output.innerHTML = '<div class="loading"></div> Ejecutando prueba...';
+    
+    const r = await doFetch(
+      document.getElementById('target').value,
+      document.getElementById('origin').value,
+      document.getElementById('method').value,
+      document.getElementById('auth').value,
+      document.getElementById('customHeaders').value,
+      document.getElementById('body').value
+    );
+    
+    output.textContent = r;
+  }
+
+  async function testMultiple() {
+    const urls = document.getElementById('urlList').value.split(/\n/).map(x => x.trim()).filter(Boolean);
+    if (urls.length === 0) {
+      alert('⚠️ No se proporcionaron URLs');
+      return;
+    }
+
+    const origin = document.getElementById('origin').value;
+    const method = document.getElementById('method').value;
+    const auth = document.getElementById('auth').value;
+    const customHeaders = document.getElementById('customHeaders').value;
+    const body = document.getElementById('body').value;
+
+    const out = document.getElementById('output');
+    out.innerHTML = `<div class="loading"></div> Ejecutando ${urls.length} pruebas...\n`;
+    
+    let allOutput = '';
+    for (const url of urls) {
+      const result = await doFetch(url, origin, method, auth, customHeaders, body);
+      allOutput += result;
+      out.textContent = allOutput;
+    }
+  }
+
+  async function testAllOrigins() {
+    const url = document.getElementById('target').value;
+    if (!url) {
+      alert('⚠️ Proporciona una URL objetivo');
+      return;
+    }
+
+    const select = document.getElementById('origin');
+    const origins = Array.from(select.options).map(o => o.value);
+    
+    const method = document.getElementById('method').value;
+    const auth = document.getElementById('auth').value;
+    const customHeaders = document.getElementById('customHeaders').value;
+    const body = document.getElementById('body').value;
+
+    const out = document.getElementById('output');
+    out.innerHTML = `<div class="loading"></div> Probando ${origins.length} origins...\n`;
+
+    let allOutput = '';
+    for (const origin of origins) {
+      const result = await doFetch(url, origin, method, auth, customHeaders, body);
+      allOutput += result;
+      out.textContent = allOutput;
+    }
+  }
+
+  function clearResults() {
+    results.length = 0;
+    vulnerabilities.length = 0;
+    stats = { requests: 0, vulns: 0, errors: 0 };
+    document.getElementById('output').textContent = 'Esperando prueba…';
+    document.getElementById('stats').style.display = 'none';
+  }
+
+  function downloadResults() {
+    const blob = new Blob([results.map(r => 
+      typeof r === 'string' ? r : JSON.stringify(r, null, 2)
+    ).join("\n\n")], {type:"text/plain"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `cors_results_${Date.now()}.txt`;
+    a.click();
+  }
+
+  function downloadJSON() {
+    const report = {
+      generated_at: new Date().toISOString(),
+      tool: 'CORS Toolkit v2.0',
+      statistics: stats,
+      vulnerabilities: vulnerabilities,
+      results: results
+    };
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], {type:"application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `cors_report_${Date.now()}.json`;
+    a.click();
+  }
+
+  // Initialize on load
+  window.onload = () => {
+    updateOriginPresets();
+    document.getElementById('target').addEventListener('input', updateOriginPresets);
+  };
+</script>
+
+</body>
+</html>
