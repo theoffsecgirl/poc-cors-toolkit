@@ -26,7 +26,7 @@ cd poc-cors-toolkit
 Abre el archivo:
 
 ```bash
-firefox poc_cors_toolkit.html
+firefox cors_toolkit.html
 ```
 
 ---
@@ -34,11 +34,3 @@ firefox poc_cors_toolkit.html
 ## Licencia
 
 Consulta el archivo `LICENSE` dentro del repositorio.
-
-## Autora
-
-Proyecto desarrollado por **TheOffSecGirl**.
-
-- GitHub: https://github.com/theoffsecgirl  
-- Web técnica: https://www.theoffsecgirl.com  
-- Academia: https://www.northstaracademy.io
