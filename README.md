@@ -1,6 +1,6 @@
 <div align="center">
 
-# poc-cors-toolkit
+# corskit
 
 **Toolkit HTML para auditar configuraciones CORS en aplicaciones web**
 
@@ -14,19 +14,40 @@
 
 ---
 
+```text
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│   ██████╗ ██████╗  ██████╗  ██████╗ ██████╗  │
+│  ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔══██╗ │
+│  ██║     ██║  ██║██████╔╝█████╗  ██║  ██║ │
+│  ██║     ██║  ██║██╔══██╗██╔══╝  ██║  ██║ │
+│  ╚██████╗██████╔╝██║  ██║███████╗██████╔╝ │
+│   ╚═════╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝  │
+│                                                      │
+│  ██████╗ █████╗  ███████╗ ██████╗              │
+│  ██╔════╝██╔══██╗ ██╔════╝██╔════╝              │
+│  █████╗  ██║  ██║ █████╗  ██████╗               │
+│  ██╔══╝  ██║  ██║ ██╔══╝  ╚════██╗              │
+│  ██║     ╚█████╔╝ ███████╗██████╔╝              │
+│  ╚═╝      ╚════╝  ╚══════╝╚═════╝               │
+│                                                      │
+│  CORS misconfiguration auditor  ·  by theoffsecgirl  │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
 ## ¿Qué hace?
 
-Herramienta standalone en HTML para probar políticas CORS desde el navegador: inserción de `Origin` personalizado, detección de reflejos dinámicos, validación de métodos permitidos, análisis de cabeceras de seguridad y comportamientos de redirección.
-
-No requiere instalación ni servidor. Abre el archivo en el navegador y listo.
+Herramienta standalone en HTML para probar políticas CORS desde el navegador. Sin instalación ni servidor: abre el archivo y listo.
 
 ---
 
 ## Casos de uso
 
 - Verificar si el servidor refleja cualquier `Origin` sin restricciones
-- Comprobar si `Access-Control-Allow-Credentials: true` está habilitado junto a origen dinámico
-- Validar qué métodos HTTP acepta el endpoint (GET, POST, OPTIONS)
+- Comprobar `Access-Control-Allow-Credentials: true` junto a origen dinámico
+- Validar métodos HTTP permitidos (GET, POST, OPTIONS)
 - Detectar cabeceras de seguridad ausentes o mal configuradas
 - Pruebas masivas con lista de endpoints
 
@@ -35,14 +56,14 @@ No requiere instalación ni servidor. Abre el archivo en el navegador y listo.
 ## Uso
 
 ```bash
-git clone https://github.com/theoffsecgirl/poc-cors-toolkit
-cd poc-cors-toolkit
+git clone https://github.com/theoffsecgirl/corskit
+cd corskit
 firefox cors_toolkit.html
 # o
 open cors_toolkit.html   # macOS
 ```
 
-Sin dependencias externas. No necesita Python, Node ni servidor local.
+Sin dependencias. No necesita Python, Node ni servidor local.
 
 ---
 
@@ -59,7 +80,7 @@ Sin dependencias externas. No necesita Python, Node ni servidor local.
 
 ---
 
-## CORS misconfiguration: ¿qué busca?
+## Patrones CORS que detecta
 
 | Patrón | Impacto |
 |--------|---------|
