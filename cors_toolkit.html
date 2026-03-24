@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>CORS Toolkit</title>
+  <title>corskit · theoffsecgirl</title>
   <style>
     :root {
       --bg: #0B0B0B;
@@ -11,130 +11,121 @@
       --text: #E5E5E5;
       --accent: #9E4AFF;
       --accent-hover: #7B2FCC;
+      --red: #FF4C4C;
+      --orange: #FF9A3C;
+      --green: #3CFF8F;
       --radius: 8px;
       --font: Inter, Arial, sans-serif;
     }
-
     body {
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 32px;
+      background: var(--bg); color: var(--text);
+      margin: 0; padding: 32px;
       font-family: var(--font);
-      display: flex;
-      justify-content: center;
+      display: flex; justify-content: center;
     }
-
-    .container {
-      width: 100%;
-      max-width: 860px;
-    }
-
-    h1 {
-      color: var(--accent);
-      font-size: 1.9rem;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-
-    h2 {
-      color: var(--accent);
-      font-size: 1.2rem;
-      margin-top: 32px;
-      margin-bottom: 12px;
-      font-weight: 500;
-    }
-
+    .container { width: 100%; max-width: 900px; }
+    h1 { color: var(--accent); font-size: 1.9rem; margin-bottom: 4px; font-weight: 700; }
+    .subtitle { color: #666; font-size: 13px; margin-bottom: 28px; }
+    h2 { color: var(--accent); font-size: 1.1rem; margin: 28px 0 10px; font-weight: 500; }
     .section {
-      background: var(--panel);
-      padding: 24px;
+      background: var(--panel); padding: 22px;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 24px;
+      border-radius: var(--radius); margin-bottom: 20px;
     }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-
+    label { display: block; margin-bottom: 5px; font-size: 13px; color: #aaa; }
     input, select, textarea {
-      width: 100%;
-      background: #111;
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 16px;
-      font-size: 14px;
+      width: 100%; background: #111; border: 1px solid var(--border);
+      color: var(--text); border-radius: 6px; padding: 10px;
+      margin-bottom: 14px; font-size: 13px; box-sizing: border-box;
     }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
+    textarea { min-height: 90px; resize: vertical; }
     button {
-      background: var(--accent);
-      border: none;
-      padding: 12px 18px;
-      color: white;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-right: 10px;
-      transition: 0.15s;
+      background: var(--accent); border: none; padding: 10px 16px;
+      color: white; border-radius: 6px; font-weight: 600;
+      cursor: pointer; margin-right: 8px; margin-bottom: 8px;
+      font-size: 13px; transition: 0.15s;
     }
-
-    button:hover {
-      background: var(--accent-hover);
+    button:hover { background: var(--accent-hover); }
+    button.secondary {
+      background: #222; border: 1px solid var(--border);
     }
-
+    button.secondary:hover { background: #333; }
     pre {
-      background: #111;
-      padding: 16px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      white-space: pre-wrap;
-      overflow-x: auto;
+      background: #0d0d0d; padding: 16px; border-radius: var(--radius);
+      border: 1px solid var(--border); white-space: pre-wrap;
+      overflow-x: auto; font-size: 12px; line-height: 1.6;
     }
+    /* Findings */
+    .findings { margin-top: 16px; }
+    .finding {
+      padding: 12px 16px; border-radius: 6px;
+      margin-bottom: 10px; font-size: 13px; line-height: 1.6;
+      border-left: 4px solid;
+    }
+    .finding.critical { background: #1a0000; border-color: var(--red); }
+    .finding.high     { background: #1a0800; border-color: var(--orange); }
+    .finding.info     { background: #111; border-color: #444; }
+    .finding .badge {
+      font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 4px; margin-right: 8px; text-transform: uppercase;
+    }
+    .badge.critical { background: var(--red); color: #000; }
+    .badge.high     { background: var(--orange); color: #000; }
+    .badge.info     { background: #444; color: #fff; }
+    .safe { color: var(--green); font-size: 13px; padding: 10px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 <div class="container">
 
-  <h1>CORS Toolkit</h1>
+  <h1>corskit</h1>
+  <div class="subtitle">CORS misconfiguration auditor · by <a href="https://theoffsecgirl.com" style="color:var(--accent);text-decoration:none">theoffsecgirl</a></div>
 
   <div class="section">
-    <label>URL objetivo</label>
-    <input type="text" id="target" value="https://example.com" oninput="updateOrigins()">
+    <div class="grid2">
+      <div>
+        <label>URL objetivo</label>
+        <input type="text" id="target" value="https://example.com" oninput="updateOrigins()">
+      </div>
+      <div>
+        <label>Método</label>
+        <select id="method">
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+        </select>
+      </div>
+    </div>
 
     <label>Origin para la prueba</label>
     <select id="origin"></select>
 
-    <label>Método</label>
-    <select id="method">
-      <option value="GET">GET</option>
-      <option value="POST">POST</option>
-    </select>
-
     <label>Authorization (opcional)</label>
-    <input type="text" id="auth" placeholder="Bearer token">
+    <input type="text" id="auth" placeholder="Bearer token...">
 
-    <label>Body para POST</label>
+    <label>Body (POST)</label>
     <textarea id="body">{ "test": "cors" }</textarea>
 
-    <label>Lista de URLs (una por línea)</label>
-    <textarea id="urlList" placeholder="https://example.com
-https://sub.example.com"></textarea>
-
-    <button onclick="testCORS()">Prueba individual</button>
-    <button onclick="testMultiple()">Probar lista</button>
-    <button onclick="downloadResults()">Exportar resultados</button>
+    <button onclick="testCORS()">&#9658; Prueba individual</button>
+    <button onclick="testAutoAll()" title="Prueba todos los origins automaticamente">&#9654;&#9654; Auto-scan origins</button>
+    <button onclick="testMultiple()">&#9776; Probar lista de URLs</button>
+    <button class="secondary" onclick="clearOutput()">Limpiar</button>
+    <button class="secondary" onclick="downloadResults()">Exportar .txt</button>
   </div>
 
-  <h2>Salida</h2>
+  <div class="section">
+    <label>Lista de URLs (prueba masiva)</label>
+    <textarea id="urlList" placeholder="https://example.com/api
+https://sub.example.com/v1"></textarea>
+  </div>
+
+  <h2>Findings</h2>
+  <div class="section">
+    <div class="findings" id="findings"></div>
+  </div>
+
+  <h2>Respuesta raw</h2>
   <div class="section">
     <pre id="output">Esperando prueba…</pre>
   </div>
@@ -144,102 +135,237 @@ https://sub.example.com"></textarea>
 <script>
   const results = [];
 
+  // --- Origins generados automaticamente desde la URL objetivo ---
   function updateOrigins() {
     const base = document.getElementById('target').value.trim();
     try {
-      const host = new URL(base).hostname;
-      const o = document.getElementById('origin');
-      o.innerHTML = '';
-      [
-        "https://evil.com",
-        "null",
-        `https://${host}.attacker.com`,
-        `https://sub.${host}`,
-        `https://${host}.`,
-        "file://",
-        "data:text/html"
-      ].forEach(p => {
+      const url   = new URL(base);
+      const host  = url.hostname;
+      const proto = url.protocol;
+      const parts = host.split('.');
+      const tld2  = parts.length >= 2 ? parts.slice(-2).join('.') : host;
+
+      const origins = [
+        `${proto}//evil.com`,
+        'null',
+        `${proto}//${host}.attacker.com`,
+        `${proto}//attacker.${tld2}`,
+        `${proto}//sub.${host}`,
+        `${proto}//${host}..attacker.com`,
+        `${proto}//${host}%60.attacker.com`,
+        'file://',
+        'data:text/html',
+      ];
+
+      const sel = document.getElementById('origin');
+      sel.innerHTML = '';
+      origins.forEach(o => {
         const opt = document.createElement('option');
-        opt.value = p;
-        opt.textContent = p;
-        o.appendChild(opt);
+        opt.value = opt.textContent = o;
+        sel.appendChild(opt);
       });
-    } catch (e) {}
+    } catch(e) {}
   }
 
-  async function doFetch(url, origin, method, auth, body) {
-    const headers = {"Content-Type": "application/json", "Origin": origin};
-    if (auth) headers["Authorization"] = auth;
+  // --- Analisis automatico de misconfiguration ---
+  function analyzeResponse(url, origin, status, headers, credentialsRequested) {
+    const acao  = headers.get('access-control-allow-origin')  || '';
+    const acac  = headers.get('access-control-allow-credentials') || '';
+    const acam  = headers.get('access-control-allow-methods') || '';
+    const acah  = headers.get('access-control-allow-headers') || '';
+    const findings = [];
 
-    const opts = { method, headers, credentials: "include", mode: "cors" };
-    if (method === "POST") {
+    const creds = acac.toLowerCase() === 'true';
+    const reflected = acao === origin && origin !== 'null' && origin !== '';
+    const wildcard  = acao === '*';
+    const nullAllowed = acao === 'null';
+
+    // CRITICAL: reflejo de origin + credenciales
+    if (reflected && creds) {
+      findings.push({
+        level: 'critical',
+        title: 'Origin reflejado + credenciales habilitadas',
+        detail: `ACAO: ${acao} | ACAC: ${acac}\nImpacto: exfiltracion de datos autenticados. PoC: fetch con credentials:include desde ${origin}`
+      });
+    }
+
+    // CRITICAL: null origin aceptado con credenciales
+    if (nullAllowed && creds) {
+      findings.push({
+        level: 'critical',
+        title: 'null origin aceptado + credenciales',
+        detail: `ACAO: null | ACAC: ${acac}\nExplotable desde iframe sandbox o file://`
+      });
+    }
+
+    // HIGH: reflejo de origin sin credenciales
+    if (reflected && !creds) {
+      findings.push({
+        level: 'high',
+        title: 'Origin reflejado sin validacion',
+        detail: `ACAO: ${acao}\nEl servidor acepta cualquier origin. Sin credenciales pero permite lectura de respuestas.`
+      });
+    }
+
+    // HIGH: wildcard con credenciales (invalido segun spec pero algunos servidores mal configurados)
+    if (wildcard && creds) {
+      findings.push({
+        level: 'high',
+        title: 'Wildcard ACAO con credenciales (misconfiguration)',
+        detail: `ACAO: * | ACAC: true\nNo valido segun CORS spec, pero indica config rota.`
+      });
+    }
+
+    // HIGH: null origin aceptado sin credenciales
+    if (nullAllowed && !creds) {
+      findings.push({
+        level: 'high',
+        title: 'null origin aceptado',
+        detail: `ACAO: null\nExplotable via iframe sandbox: <iframe sandbox="allow-scripts" src="data:...">`
+      });
+    }
+
+    // INFO: metodos peligrosos en preflight
+    if (acam && /DELETE|PUT|PATCH/i.test(acam)) {
+      findings.push({
+        level: 'high',
+        title: 'Metodos peligrosos permitidos en CORS',
+        detail: `Access-Control-Allow-Methods: ${acam}`
+      });
+    }
+
+    // INFO: sin header ACAO (CORS bloqueado)
+    if (!acao) {
+      findings.push({
+        level: 'info',
+        title: 'Sin cabecera ACAO (CORS no habilitado o bloqueado)',
+        detail: `Origin probado: ${origin}\nStatus: ${status}`
+      });
+    }
+
+    return findings;
+  }
+
+  function renderFindings(allFindings) {
+    const container = document.getElementById('findings');
+    if (allFindings.length === 0) {
+      container.innerHTML = '<div class="safe">✅ Ninguna misconfiguration detectada con los origins probados.</div>';
+      return;
+    }
+    container.innerHTML = allFindings.map(f => `
+      <div class="finding ${f.level}">
+        <span class="badge ${f.level}">${f.level}</span>
+        <strong>${f.title}</strong><br>
+        <span style="color:#888;font-size:12px">${f.detail.replace(/\n/g,'<br>')}</span>
+      </div>
+    `).join('');
+  }
+
+  // --- Fetch con analisis ---
+  async function doFetch(url, origin, method, auth, body) {
+    const headers = { 'Content-Type': 'application/json', 'Origin': origin };
+    if (auth) headers['Authorization'] = auth;
+    const opts = { method, headers, credentials: 'include', mode: 'cors' };
+    if (method === 'POST') {
       try { opts.body = JSON.stringify(JSON.parse(body)); }
-      catch { return `Body JSON inválido.\n---\n`; }
+      catch { return { text: `Body JSON invalido.\n---\n`, findings: [] }; }
     }
 
     try {
       const res = await fetch(url, opts);
-      const headerDump = [...res.headers.entries()].map(e => `${e[0]}: ${e[1]}`).join("\n");
+      const respHeaders = res.headers;
       const text = await res.text();
-      const r =
-`${url}
-Origin: ${origin}
-Status: ${res.status}
+      const headerDump = [...respHeaders.entries()].map(e => `${e[0]}: ${e[1]}`).join('\n');
+      const findings = analyzeResponse(url, origin, res.status, respHeaders, true);
 
-Headers:
-${headerDump}
-
-Body:
-${text}
----
-`;
-      results.push(r);
-      return r;
-    } catch (err) {
-      const fail = `${url}\nError: ${err}\n---\n`;
-      results.push(fail);
-      return fail;
+      const raw = `URL:    ${url}\nOrigin: ${origin}\nStatus: ${res.status}\n\nHeaders:\n${headerDump}\n\nBody (primeros 500 chars):\n${text.slice(0,500)}\n---\n`;
+      results.push(raw);
+      return { text: raw, findings };
+    } catch(err) {
+      const raw = `${url}\nError: ${err}\n---\n`;
+      results.push(raw);
+      return { text: raw, findings: [] };
     }
   }
 
+  // --- Acciones ---
   async function testCORS() {
-    document.getElementById('output').innerText = "Ejecutando…";
-    const r = await doFetch(
+    document.getElementById('output').innerText = 'Ejecutando…';
+    document.getElementById('findings').innerHTML = '';
+    const { text, findings } = await doFetch(
       document.getElementById('target').value,
       document.getElementById('origin').value,
       document.getElementById('method').value,
       document.getElementById('auth').value,
       document.getElementById('body').value
     );
-    document.getElementById('output').innerText = r;
+    document.getElementById('output').innerText = text;
+    renderFindings(findings);
+  }
+
+  async function testAutoAll() {
+    const url    = document.getElementById('target').value;
+    const method = document.getElementById('method').value;
+    const auth   = document.getElementById('auth').value;
+    const body   = document.getElementById('body').value;
+    const sel    = document.getElementById('origin');
+    const origins = [...sel.options].map(o => o.value);
+
+    const out = document.getElementById('output');
+    out.innerText = 'Probando todos los origins…\n';
+    document.getElementById('findings').innerHTML = '';
+    results.length = 0;
+
+    const allFindings = [];
+    for (const origin of origins) {
+      const { text, findings } = await doFetch(url, origin, method, auth, body);
+      out.innerText += text;
+      allFindings.push(...findings);
+    }
+    // dedup por titulo
+    const seen = new Set();
+    const unique = allFindings.filter(f => { if (seen.has(f.title)) return false; seen.add(f.title); return true; });
+    renderFindings(unique);
   }
 
   async function testMultiple() {
-    const urls = document.getElementById('urlList').value.split(/\n/).map(x => x.trim()).filter(Boolean);
+    const urls   = document.getElementById('urlList').value.split(/\n/).map(x => x.trim()).filter(Boolean);
     const origin = document.getElementById('origin').value;
     const method = document.getElementById('method').value;
-    const auth = document.getElementById('auth').value;
-    const body = document.getElementById('body').value;
+    const auth   = document.getElementById('auth').value;
+    const body   = document.getElementById('body').value;
 
     const out = document.getElementById('output');
-    out.innerText = "Ejecutando pruebas…\n";
+    out.innerText = 'Ejecutando pruebas masivas…\n';
+    document.getElementById('findings').innerHTML = '';
     results.length = 0;
 
+    const allFindings = [];
     for (const url of urls) {
-      out.innerText += await doFetch(url, origin, method, auth, body);
+      const { text, findings } = await doFetch(url, origin, method, auth, body);
+      out.innerText += text;
+      allFindings.push(...findings);
     }
+    const seen = new Set();
+    renderFindings(allFindings.filter(f => { if (seen.has(f.title+f.detail)) return false; seen.add(f.title+f.detail); return true; }));
+  }
+
+  function clearOutput() {
+    document.getElementById('output').innerText = 'Esperando prueba…';
+    document.getElementById('findings').innerHTML = '';
+    results.length = 0;
   }
 
   function downloadResults() {
-    const blob = new Blob([results.join("\n")], {type:"text/plain"});
+    if (!results.length) return;
+    const blob = new Blob([results.join('\n')], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = "cors_results.txt";
+    a.download = `corskit_${Date.now()}.txt`;
     a.click();
   }
 
   window.onload = updateOrigins;
 </script>
-
 </body>
 </html>
