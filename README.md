@@ -2,11 +2,12 @@
 
 # corskit
 
-**Toolkit HTML para auditar configuraciones CORS en aplicaciones web**
+**CORS misconfiguration tester — herramienta web ofensiva**
 
-![Language](https://img.shields.io/badge/HTML-tool-9E4AFF?style=flat-square&logo=html5&logoColor=white)
+![Language](https://img.shields.io/badge/HTML%20%2F%20JS-Browser-9E4AFF?style=flat-square&logo=javascript&logoColor=white)
+![Version](https://img.shields.io/badge/version-1.1.0-9E4AFF?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-9E4AFF?style=flat-square)
-![Category](https://img.shields.io/badge/Category-Bug%20Bounty%20%7C%20PoC-111111?style=flat-square)
+![Category](https://img.shields.io/badge/Category-Bug%20Bounty%20%7C%20Pentesting-111111?style=flat-square)
 
 *by [theoffsecgirl](https://github.com/theoffsecgirl)*
 
@@ -14,81 +15,47 @@
 
 ---
 
-```text
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│   ██████╗ ██████╗  ██████╗  ██████╗ ██████╗  │
-│  ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔══██╗ │
-│  ██║     ██║  ██║██████╔╝█████╗  ██║  ██║ │
-│  ██║     ██║  ██║██╔══██╗██╔══╝  ██║  ██║ │
-│  ╚██████╗██████╔╝██║  ██║███████╗██████╔╝ │
-│   ╚═════╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝  │
-│                                                      │
-│  ██████╗ █████╗  ███████╗ ██████╗              │
-│  ██╔════╝██╔══██╗ ██╔════╝██╔════╝              │
-│  █████╗  ██║  ██║ █████╗  ██████╗               │
-│  ██╔══╝  ██║  ██║ ██╔══╝  ╚════██╗              │
-│  ██║     ╚█████╔╝ ███████╗██████╔╝              │
-│  ╚═╝      ╚════╝  ╚══════╝╚═════╝               │
-│                                                      │
-│  CORS misconfiguration auditor  ·  by theoffsecgirl  │
-└──────────────────────────────────────────────────────┘
-```
-
----
-
 ## ¿Qué hace?
 
-Herramienta standalone en HTML para probar políticas CORS desde el navegador. Sin instalación ni servidor: abre el archivo y listo.
-
----
-
-## Casos de uso
-
-- Verificar si el servidor refleja cualquier `Origin` sin restricciones
-- Comprobar `Access-Control-Allow-Credentials: true` junto a origen dinámico
-- Validar métodos HTTP permitidos (GET, POST, OPTIONS)
-- Detectar cabeceras de seguridad ausentes o mal configuradas
-- Pruebas masivas con lista de endpoints
-
----
-
-## Uso
-
-```bash
-git clone https://github.com/theoffsecgirl/corskit
-cd corskit
-firefox cors_toolkit.html
-# o
-open cors_toolkit.html   # macOS
-```
-
-Sin dependencias. No necesita Python, Node ni servidor local.
+Herramienta web (HTML + JavaScript puro, sin dependencias) para detectar misconfigurations CORS en endpoints web. Permite testear un endpoint único, lanzar un escaneo automático de origins precalculados y visualizar los resultados con clasificación de severidad.
 
 ---
 
 ## Funcionalidades
 
-```text
-[+] Inserción controlada de Origin personalizado
-[+] Pruebas GET y POST
-[+] Authorization opcional (Bearer token)
-[+] Detección de reflejo dinámico del Origin
-[+] Pruebas masivas por lista de endpoints
-[+] Exportación de resultados
+- Test manual por origin individual
+- **Auto-scan**: prueba todos los origins generados automáticamente de una vez
+- Detección de misconfigurations con severidad: `critical` / `high` / `info`
+- Origins generados: subdominios, wildcard tld, bypass chars (`%60`, `..`), `null`, `data:`, `file://`
+- Método configurable: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
+- Exportación de resultados como `corskit_{timestamp}.txt`
+- Sin dependencias externas — abre directamente en el navegador
+
+---
+
+## Uso
+
+### Opción 1 — Abrir directo
+
+```bash
+git clone https://github.com/theoffsecgirl/corskit.git
+cd corskit
+open cors_toolkit.html   # macOS
+xdg-open cors_toolkit.html  # Linux
+```
+
+### Opción 2 — Servidor local (evita restricciones CORS del propio navegador)
+
+```bash
+python3 -m http.server 8080
+# Abrir: http://localhost:8080/cors_toolkit.html
 ```
 
 ---
 
-## Patrones CORS que detecta
+## Archivo principal
 
-| Patrón | Impacto |
-|--------|---------|
-| `Access-Control-Allow-Origin: *` + credenciales | Alto |
-| Reflejo dinámico del Origin sin validación | Alto |
-| `null` origin aceptado | Medio-Alto |
-| Subdominio de atacante aceptado | Alto |
-| Preflight con métodos peligrosos permitidos | Medio |
+`cors_toolkit.html` — fichero único, todo autocontenido.
 
 ---
 
