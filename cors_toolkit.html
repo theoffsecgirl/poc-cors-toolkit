@@ -14,6 +14,7 @@
       --red: #FF4C4C;
       --orange: #FF9A3C;
       --green: #3CFF8F;
+      --blue: #3CB8FF;
       --radius: 8px;
       --font: Inter, Arial, sans-serif;
     }
@@ -47,16 +48,19 @@
     }
     button:hover { background: var(--accent-hover); }
     button.secondary {
-      background: #222; border: 1px solid var(--border);
+      background: #222; border: 1px solid var(--border); color: var(--text);
     }
     button.secondary:hover { background: #333; }
+    button.preflight {
+      background: #0a2a3a; border: 1px solid var(--blue); color: var(--blue);
+    }
+    button.preflight:hover { background: #0d3a50; }
     pre {
       background: #0d0d0d; padding: 16px; border-radius: var(--radius);
       border: 1px solid var(--border); white-space: pre-wrap;
       overflow-x: auto; font-size: 12px; line-height: 1.6;
     }
-    /* Findings */
-    .findings { margin-top: 16px; }
+    .findings { margin-top: 8px; }
     .finding {
       padding: 12px 16px; border-radius: 6px;
       margin-bottom: 10px; font-size: 13px; line-height: 1.6;
@@ -64,36 +68,55 @@
     }
     .finding.critical { background: #1a0000; border-color: var(--red); }
     .finding.high     { background: #1a0800; border-color: var(--orange); }
-    .finding.info     { background: #111; border-color: #444; }
+    .finding.medium   { background: #0a1a00; border-color: #7fff00; }
+    .finding.info     { background: #111;    border-color: #444; }
+    .finding.preflight-finding { background: #050f18; border-color: var(--blue); }
     .finding .badge {
       font-size: 11px; font-weight: 700; padding: 2px 8px;
       border-radius: 4px; margin-right: 8px; text-transform: uppercase;
     }
-    .badge.critical { background: var(--red); color: #000; }
-    .badge.high     { background: var(--orange); color: #000; }
-    .badge.info     { background: #444; color: #fff; }
+    .badge.critical  { background: var(--red);    color: #000; }
+    .badge.high      { background: var(--orange); color: #000; }
+    .badge.medium    { background: #7fff00;       color: #000; }
+    .badge.info      { background: #444;          color: #fff; }
+    .badge.preflight { background: var(--blue);   color: #000; }
     .safe { color: var(--green); font-size: 13px; padding: 10px 0; }
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) {
+      .grid2, .grid3 { grid-template-columns: 1fr; }
+    }
+    .tag {
+      display: inline-block; font-size: 11px; padding: 2px 8px;
+      border-radius: 4px; background: #222; color: #888;
+      border: 1px solid #333; margin-right: 4px;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
   </style>
 </head>
 <body>
 <div class="container">
 
   <h1>corskit</h1>
-  <div class="subtitle">CORS misconfiguration auditor · by <a href="https://theoffsecgirl.com" style="color:var(--accent);text-decoration:none">theoffsecgirl</a></div>
+  <div class="subtitle">
+    v1.2.0 · CORS misconfiguration auditor ·
+    by <a href="https://theoffsecgirl.com" style="color:var(--accent);text-decoration:none">theoffsecgirl</a>
+  </div>
 
+  <!-- Configuracion principal -->
   <div class="section">
     <div class="grid2">
       <div>
         <label>URL objetivo</label>
-        <input type="text" id="target" value="https://example.com" oninput="updateOrigins()">
+        <input type="text" id="target" value="https://example.com/api" oninput="updateOrigins()">
       </div>
       <div>
-        <label>Método</label>
+        <label>Método (para prueba simple)</label>
         <select id="method">
           <option value="GET">GET</option>
           <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
         </select>
       </div>
     </div>
@@ -104,27 +127,67 @@
     <label>Authorization (opcional)</label>
     <input type="text" id="auth" placeholder="Bearer token...">
 
-    <label>Body (POST)</label>
+    <label>Body (POST / PUT)</label>
     <textarea id="body">{ "test": "cors" }</textarea>
 
     <button onclick="testCORS()">&#9658; Prueba individual</button>
     <button onclick="testAutoAll()" title="Prueba todos los origins automaticamente">&#9654;&#9654; Auto-scan origins</button>
-    <button onclick="testMultiple()">&#9776; Probar lista de URLs</button>
+    <button onclick="testMultiple()">&#9776; Lista de URLs</button>
+    <button class="preflight" onclick="testPreflight()" title="Lanza OPTIONS preflight y analiza la respuesta">&#x2299; Preflight OPTIONS</button>
+    <button class="preflight" onclick="testPreflightAutoAll()" title="Preflight con todos los origins">&#x2299;&#9654; Preflight auto-scan</button>
     <button class="secondary" onclick="clearOutput()">Limpiar</button>
     <button class="secondary" onclick="downloadResults()">Exportar .txt</button>
   </div>
 
+  <!-- Opciones preflight -->
   <div class="section">
-    <label>Lista de URLs (prueba masiva)</label>
-    <textarea id="urlList" placeholder="https://example.com/api
-https://sub.example.com/v1"></textarea>
+    <h2 style="margin-top:0">Opciones Preflight OPTIONS</h2>
+    <div class="grid3">
+      <div>
+        <label>Access-Control-Request-Method</label>
+        <select id="preflightMethod">
+          <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+          <option value="PATCH">PATCH</option>
+          <option value="GET">GET</option>
+        </select>
+      </div>
+      <div>
+        <label>Access-Control-Request-Headers</label>
+        <input type="text" id="preflightHeaders" value="Authorization, Content-Type, X-Custom-Header">
+      </div>
+      <div>
+        <label>Timeout (ms)</label>
+        <input type="number" id="preflightTimeout" value="8000" min="1000" max="30000">
+      </div>
+    </div>
+    <div style="font-size:12px;color:#555;margin-top:-8px">
+      El preflight OPTIONS se envía automáticamente por el navegador antes de requests CORS no simples.
+      Comprueba si el servidor acepta el request antes de que llegue el payload real.
+    </div>
   </div>
 
+  <!-- Lista masiva -->
+  <div class="section">
+    <label>Lista de URLs (prueba masiva)</label>
+    <textarea id="urlList" placeholder="https://example.com/api&#10;https://sub.example.com/v1"></textarea>
+  </div>
+
+  <!-- Findings -->
   <h2>Findings</h2>
   <div class="section">
     <div class="findings" id="findings"></div>
   </div>
 
+  <!-- Preflight findings -->
+  <h2>Preflight Findings <span class="tag">OPTIONS</span></h2>
+  <div class="section">
+    <div class="findings" id="preflightFindings"></div>
+    <pre id="preflightOutput" style="margin-top:12px">Sin preflight ejecutado aun.</pre>
+  </div>
+
+  <!-- Raw output -->
   <h2>Respuesta raw</h2>
   <div class="section">
     <pre id="output">Esperando prueba…</pre>
@@ -135,7 +198,8 @@ https://sub.example.com/v1"></textarea>
 <script>
   const results = [];
 
-  // --- Origins generados automaticamente desde la URL objetivo ---
+  // ---------- Origins ----------
+
   function updateOrigins() {
     const base = document.getElementById('target').value.trim();
     try {
@@ -167,20 +231,19 @@ https://sub.example.com/v1"></textarea>
     } catch(e) {}
   }
 
-  // --- Analisis automatico de misconfiguration ---
+  // ---------- Analisis CORS simple ----------
+
   function analyzeResponse(url, origin, status, headers, credentialsRequested) {
-    const acao  = headers.get('access-control-allow-origin')  || '';
-    const acac  = headers.get('access-control-allow-credentials') || '';
-    const acam  = headers.get('access-control-allow-methods') || '';
-    const acah  = headers.get('access-control-allow-headers') || '';
+    const acao = headers.get('access-control-allow-origin')  || '';
+    const acac = headers.get('access-control-allow-credentials') || '';
+    const acam = headers.get('access-control-allow-methods') || '';
     const findings = [];
 
-    const creds = acac.toLowerCase() === 'true';
-    const reflected = acao === origin && origin !== 'null' && origin !== '';
-    const wildcard  = acao === '*';
+    const creds      = acac.toLowerCase() === 'true';
+    const reflected  = acao === origin && origin !== 'null' && origin !== '';
+    const wildcard   = acao === '*';
     const nullAllowed = acao === 'null';
 
-    // CRITICAL: reflejo de origin + credenciales
     if (reflected && creds) {
       findings.push({
         level: 'critical',
@@ -188,8 +251,6 @@ https://sub.example.com/v1"></textarea>
         detail: `ACAO: ${acao} | ACAC: ${acac}\nImpacto: exfiltracion de datos autenticados. PoC: fetch con credentials:include desde ${origin}`
       });
     }
-
-    // CRITICAL: null origin aceptado con credenciales
     if (nullAllowed && creds) {
       findings.push({
         level: 'critical',
@@ -197,8 +258,6 @@ https://sub.example.com/v1"></textarea>
         detail: `ACAO: null | ACAC: ${acac}\nExplotable desde iframe sandbox o file://`
       });
     }
-
-    // HIGH: reflejo de origin sin credenciales
     if (reflected && !creds) {
       findings.push({
         level: 'high',
@@ -206,17 +265,13 @@ https://sub.example.com/v1"></textarea>
         detail: `ACAO: ${acao}\nEl servidor acepta cualquier origin. Sin credenciales pero permite lectura de respuestas.`
       });
     }
-
-    // HIGH: wildcard con credenciales (invalido segun spec pero algunos servidores mal configurados)
     if (wildcard && creds) {
       findings.push({
         level: 'high',
         title: 'Wildcard ACAO con credenciales (misconfiguration)',
-        detail: `ACAO: * | ACAC: true\nNo valido segun CORS spec, pero indica config rota.`
+        detail: `ACAO: * | ACAC: true\nNo valido segun CORS spec, indica config rota.`
       });
     }
-
-    // HIGH: null origin aceptado sin credenciales
     if (nullAllowed && !creds) {
       findings.push({
         level: 'high',
@@ -224,35 +279,158 @@ https://sub.example.com/v1"></textarea>
         detail: `ACAO: null\nExplotable via iframe sandbox: <iframe sandbox="allow-scripts" src="data:...">`
       });
     }
-
-    // INFO: metodos peligrosos en preflight
     if (acam && /DELETE|PUT|PATCH/i.test(acam)) {
       findings.push({
         level: 'high',
-        title: 'Metodos peligrosos permitidos en CORS',
+        title: 'Metodos peligrosos en CORS',
         detail: `Access-Control-Allow-Methods: ${acam}`
       });
     }
-
-    // INFO: sin header ACAO (CORS bloqueado)
     if (!acao) {
       findings.push({
         level: 'info',
         title: 'Sin cabecera ACAO (CORS no habilitado o bloqueado)',
-        detail: `Origin probado: ${origin}\nStatus: ${status}`
+        detail: `Origin probado: ${origin} | Status: ${status}`
+      });
+    }
+    return findings;
+  }
+
+  // ---------- Analisis Preflight ----------
+
+  function analyzePreflightResponse(url, origin, status, headers, requestedMethod, requestedHeaders) {
+    const acao  = headers.get('access-control-allow-origin')   || '';
+    const acac  = headers.get('access-control-allow-credentials') || '';
+    const acam  = headers.get('access-control-allow-methods')  || '';
+    const acah  = headers.get('access-control-allow-headers')  || '';
+    const acma  = headers.get('access-control-max-age')        || '';
+    const findings = [];
+
+    const creds     = acac.toLowerCase() === 'true';
+    const reflected = acao === origin && origin !== 'null' && origin !== '';
+    const wildcard  = acao === '*';
+    const nullOk    = acao === 'null';
+
+    // Server no responde a OPTIONS (CORS bloqueado a nivel preflight)
+    if (status === 0 || status === 403 || status === 405) {
+      findings.push({
+        level: 'info',
+        title: `Preflight bloqueado (HTTP ${status || 'network error'})`,
+        detail: `El servidor rechaza el OPTIONS antes de que llegue el request real.\nEsto puede ocultar una misconfiguration en el handler principal.\nURL: ${url} | Origin: ${origin}`,
+        preflight: true
+      });
+    }
+
+    // Origin reflejado en preflight + credenciales
+    if (reflected && creds) {
+      findings.push({
+        level: 'critical',
+        title: '[PREFLIGHT] Origin reflejado + credenciales en preflight',
+        detail: `ACAO: ${acao} | ACAC: ${acac}\nEl servidor confirma en el preflight que acepta este origin con credenciales.`,
+        preflight: true
+      });
+    }
+
+    // Wildcard en preflight con credenciales
+    if (wildcard && creds) {
+      findings.push({
+        level: 'high',
+        title: '[PREFLIGHT] Wildcard ACAO + credenciales',
+        detail: `ACAO: * | ACAC: true\nConfig rota. Algunos servidores mal configurados lo responden asi.`,
+        preflight: true
+      });
+    }
+
+    // Origin reflejado en preflight sin credenciales
+    if (reflected && !creds) {
+      findings.push({
+        level: 'high',
+        title: '[PREFLIGHT] Origin reflejado sin validacion',
+        detail: `ACAO: ${acao}\nEl servidor aprueba el preflight para cualquier origin.`,
+        preflight: true
+      });
+    }
+
+    // Metodos peligrosos permitidos en preflight
+    if (acam) {
+      const dangerous = acam.split(',').map(m => m.trim()).filter(m => /^(DELETE|PUT|PATCH|CONNECT|TRACE)$/i.test(m));
+      if (dangerous.length > 0) {
+        findings.push({
+          level: 'high',
+          title: '[PREFLIGHT] Metodos peligrosos permitidos',
+          detail: `Access-Control-Allow-Methods: ${acam}\nMetodos de riesgo detectados: ${dangerous.join(', ')}`,
+          preflight: true
+        });
+      }
+    }
+
+    // Headers sensibles permitidos
+    if (acah) {
+      const sensitiveHeaders = ['authorization', 'x-api-key', 'x-auth-token', 'cookie', 'x-csrf-token'];
+      const found = acah.toLowerCase().split(',').map(h => h.trim()).filter(h => sensitiveHeaders.some(s => h.includes(s)));
+      if (found.length > 0) {
+        findings.push({
+          level: 'medium',
+          title: '[PREFLIGHT] Headers sensibles permitidos en CORS',
+          detail: `Access-Control-Allow-Headers: ${acah}\nHeaders sensibles: ${found.join(', ')}`,
+          preflight: true
+        });
+      }
+      // Header wildcard
+      if (acah.trim() === '*') {
+        findings.push({
+          level: 'high',
+          title: '[PREFLIGHT] Wildcard en Access-Control-Allow-Headers',
+          detail: `ACAH: *\nEl servidor acepta cualquier header en requests cross-origin.`,
+          preflight: true
+        });
+      }
+    }
+
+    // null origin en preflight
+    if (nullOk) {
+      findings.push({
+        level: creds ? 'critical' : 'high',
+        title: '[PREFLIGHT] null origin aceptado en preflight',
+        detail: `ACAO: null | ACAC: ${acac || 'false'}\nExplotable desde iframe sandbox.`,
+        preflight: true
+      });
+    }
+
+    // Max-Age muy alto (caching de preflight prolongado)
+    if (acma && parseInt(acma) > 86400) {
+      findings.push({
+        level: 'info',
+        title: '[PREFLIGHT] Max-Age muy alto en preflight cache',
+        detail: `Access-Control-Max-Age: ${acma}s (${Math.round(parseInt(acma)/3600)}h)\nEl navegador cachea esta respuesta preflight durante mucho tiempo.`,
+        preflight: true
+      });
+    }
+
+    // Preflight OK pero sin misconfiguration
+    if (findings.length === 0 && status >= 200 && status < 300) {
+      findings.push({
+        level: 'info',
+        title: '[PREFLIGHT] Respuesta OPTIONS OK sin misconfiguration detectada',
+        detail: `Status: ${status} | ACAO: ${acao || '(no presente)'} | ACAM: ${acam || '(no presente)'}`,
+        preflight: true
       });
     }
 
     return findings;
   }
 
-  function renderFindings(allFindings) {
-    const container = document.getElementById('findings');
-    if (allFindings.length === 0) {
+  // ---------- Render ----------
+
+  function renderFindings(allFindings, containerId = 'findings') {
+    const container = document.getElementById(containerId);
+    const relevant = allFindings.filter(f => !f.preflight);
+    if (relevant.length === 0 && containerId === 'findings') {
       container.innerHTML = '<div class="safe">✅ Ninguna misconfiguration detectada con los origins probados.</div>';
       return;
     }
-    container.innerHTML = allFindings.map(f => `
+    if (relevant.length === 0 && containerId !== 'findings') return;
+    container.innerHTML = relevant.map(f => `
       <div class="finding ${f.level}">
         <span class="badge ${f.level}">${f.level}</span>
         <strong>${f.title}</strong><br>
@@ -261,24 +439,39 @@ https://sub.example.com/v1"></textarea>
     `).join('');
   }
 
-  // --- Fetch con analisis ---
+  function renderPreflightFindings(allFindings) {
+    const container = document.getElementById('preflightFindings');
+    const pf = allFindings.filter(f => f.preflight);
+    if (pf.length === 0) {
+      container.innerHTML = '<div style="color:#555;font-size:13px">Sin resultados de preflight aun.</div>';
+      return;
+    }
+    container.innerHTML = pf.map(f => `
+      <div class="finding preflight-finding">
+        <span class="badge preflight">OPTIONS</span>
+        <span class="badge ${f.level}">${f.level}</span>
+        <strong>${f.title}</strong><br>
+        <span style="color:#888;font-size:12px">${f.detail.replace(/\n/g,'<br>')}</span>
+      </div>
+    `).join('');
+  }
+
+  // ---------- Fetch CORS simple ----------
+
   async function doFetch(url, origin, method, auth, body) {
     const headers = { 'Content-Type': 'application/json', 'Origin': origin };
     if (auth) headers['Authorization'] = auth;
     const opts = { method, headers, credentials: 'include', mode: 'cors' };
-    if (method === 'POST') {
+    if (['POST','PUT','PATCH'].includes(method)) {
       try { opts.body = JSON.stringify(JSON.parse(body)); }
       catch { return { text: `Body JSON invalido.\n---\n`, findings: [] }; }
     }
-
     try {
       const res = await fetch(url, opts);
-      const respHeaders = res.headers;
       const text = await res.text();
-      const headerDump = [...respHeaders.entries()].map(e => `${e[0]}: ${e[1]}`).join('\n');
-      const findings = analyzeResponse(url, origin, res.status, respHeaders, true);
-
-      const raw = `URL:    ${url}\nOrigin: ${origin}\nStatus: ${res.status}\n\nHeaders:\n${headerDump}\n\nBody (primeros 500 chars):\n${text.slice(0,500)}\n---\n`;
+      const headerDump = [...res.headers.entries()].map(e => `${e[0]}: ${e[1]}`).join('\n');
+      const findings = analyzeResponse(url, origin, res.status, res.headers, true);
+      const raw = `URL:    ${url}\nOrigin: ${origin}\nStatus: ${res.status}\n\nHeaders:\n${headerDump}\n\nBody (500 chars):\n${text.slice(0,500)}\n---\n`;
       results.push(raw);
       return { text: raw, findings };
     } catch(err) {
@@ -288,7 +481,44 @@ https://sub.example.com/v1"></textarea>
     }
   }
 
-  // --- Acciones ---
+  // ---------- Fetch Preflight OPTIONS ----------
+
+  async function doPreflight(url, origin, requestedMethod, requestedHeaders, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(url, {
+        method: 'OPTIONS',
+        headers: {
+          'Origin': origin,
+          'Access-Control-Request-Method': requestedMethod,
+          'Access-Control-Request-Headers': requestedHeaders,
+        },
+        signal: controller.signal,
+        mode: 'cors',
+      });
+      clearTimeout(timer);
+
+      const headerDump = [...res.headers.entries()].map(e => `${e[0]}: ${e[1]}`).join('\n');
+      const findings = analyzePreflightResponse(url, origin, res.status, res.headers, requestedMethod, requestedHeaders);
+
+      const raw = `[PREFLIGHT OPTIONS]\nURL:     ${url}\nOrigin:  ${origin}\nACRM:    ${requestedMethod}\nACRH:    ${requestedHeaders}\nStatus:  ${res.status}\n\nHeaders:\n${headerDump || '(ninguno)'}\n---\n`;
+      results.push(raw);
+      return { text: raw, findings };
+
+    } catch(err) {
+      clearTimeout(timer);
+      const isTimeout = err.name === 'AbortError';
+      const findings = analyzePreflightResponse(url, origin, isTimeout ? 408 : 0, new Headers(), requestedMethod, requestedHeaders);
+      const raw = `[PREFLIGHT OPTIONS]\nURL:    ${url}\nOrigin: ${origin}\nError:  ${isTimeout ? 'Timeout (' + timeoutMs + 'ms)' : err}\n---\n`;
+      results.push(raw);
+      return { text: raw, findings };
+    }
+  }
+
+  // ---------- Acciones ----------
+
   async function testCORS() {
     document.getElementById('output').innerText = 'Ejecutando…';
     document.getElementById('findings').innerHTML = '';
@@ -308,8 +538,7 @@ https://sub.example.com/v1"></textarea>
     const method = document.getElementById('method').value;
     const auth   = document.getElementById('auth').value;
     const body   = document.getElementById('body').value;
-    const sel    = document.getElementById('origin');
-    const origins = [...sel.options].map(o => o.value);
+    const origins = [...document.getElementById('origin').options].map(o => o.value);
 
     const out = document.getElementById('output');
     out.innerText = 'Probando todos los origins…\n';
@@ -322,10 +551,11 @@ https://sub.example.com/v1"></textarea>
       out.innerText += text;
       allFindings.push(...findings);
     }
-    // dedup por titulo
     const seen = new Set();
-    const unique = allFindings.filter(f => { if (seen.has(f.title)) return false; seen.add(f.title); return true; });
-    renderFindings(unique);
+    renderFindings(allFindings.filter(f => {
+      if (seen.has(f.title)) return false;
+      seen.add(f.title); return true;
+    }));
   }
 
   async function testMultiple() {
@@ -347,12 +577,57 @@ https://sub.example.com/v1"></textarea>
       allFindings.push(...findings);
     }
     const seen = new Set();
-    renderFindings(allFindings.filter(f => { if (seen.has(f.title+f.detail)) return false; seen.add(f.title+f.detail); return true; }));
+    renderFindings(allFindings.filter(f => {
+      const k = f.title + f.detail;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    }));
+  }
+
+  async function testPreflight() {
+    const url              = document.getElementById('target').value;
+    const origin           = document.getElementById('origin').value;
+    const requestedMethod  = document.getElementById('preflightMethod').value;
+    const requestedHeaders = document.getElementById('preflightHeaders').value;
+    const timeoutMs        = parseInt(document.getElementById('preflightTimeout').value) || 8000;
+
+    document.getElementById('preflightOutput').innerText = 'Ejecutando preflight OPTIONS…';
+    document.getElementById('preflightFindings').innerHTML = '';
+
+    const { text, findings } = await doPreflight(url, origin, requestedMethod, requestedHeaders, timeoutMs);
+    document.getElementById('preflightOutput').innerText = text;
+    renderPreflightFindings(findings);
+  }
+
+  async function testPreflightAutoAll() {
+    const url              = document.getElementById('target').value;
+    const requestedMethod  = document.getElementById('preflightMethod').value;
+    const requestedHeaders = document.getElementById('preflightHeaders').value;
+    const timeoutMs        = parseInt(document.getElementById('preflightTimeout').value) || 8000;
+    const origins          = [...document.getElementById('origin').options].map(o => o.value);
+
+    document.getElementById('preflightOutput').innerText = 'Preflight auto-scan en curso…\n';
+    document.getElementById('preflightFindings').innerHTML = '';
+
+    const allFindings = [];
+    for (const origin of origins) {
+      const { text, findings } = await doPreflight(url, origin, requestedMethod, requestedHeaders, timeoutMs);
+      document.getElementById('preflightOutput').innerText += text;
+      allFindings.push(...findings);
+    }
+    const seen = new Set();
+    renderPreflightFindings(allFindings.filter(f => {
+      const k = f.title + f.detail;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    }));
   }
 
   function clearOutput() {
     document.getElementById('output').innerText = 'Esperando prueba…';
+    document.getElementById('preflightOutput').innerText = 'Sin preflight ejecutado aun.';
     document.getElementById('findings').innerHTML = '';
+    document.getElementById('preflightFindings').innerHTML = '';
     results.length = 0;
   }
 
