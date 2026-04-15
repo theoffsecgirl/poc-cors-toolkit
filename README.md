@@ -2,7 +2,7 @@
 
 # corskit
 
-**CORS misconfiguration tester — herramienta web ofensiva**
+**CORS misconfiguration tester — offensive web tool**
 
 ![Language](https://img.shields.io/badge/HTML%20%2F%20JS-Browser-9E4AFF?style=flat-square&logo=javascript&logoColor=white)
 ![Version](https://img.shields.io/badge/version-1.1.0-9E4AFF?style=flat-square)
@@ -11,31 +11,33 @@
 
 *by [theoffsecgirl](https://github.com/theoffsecgirl)*
 
+> 🇪🇸 [Versión en español](README.es.md)
+
 </div>
 
 ---
 
-## ¿Qué hace?
+## What does it do?
 
-Herramienta web (HTML + JavaScript puro, sin dependencias) para detectar misconfigurations CORS en endpoints web. Permite testear un endpoint único, lanzar un escaneo automático de origins precalculados y visualizar los resultados con clasificación de severidad.
-
----
-
-## Funcionalidades
-
-- Test manual por origin individual
-- **Auto-scan**: prueba todos los origins generados automáticamente de una vez
-- Detección de misconfigurations con severidad: `critical` / `high` / `info`
-- Origins generados: subdominios, wildcard tld, bypass chars (`%60`, `..`), `null`, `data:`, `file://`
-- Método configurable: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
-- Exportación de resultados como `corskit_{timestamp}.txt`
-- Sin dependencias externas — abre directamente en el navegador
+Web tool (pure HTML + JavaScript, no dependencies) to detect CORS misconfigurations in web endpoints. Allows testing a single endpoint, running an automatic scan of pre-generated origins, and visualizing results with severity classification.
 
 ---
 
-## Uso
+## Features
 
-### Opción 1 — Abrir directo
+- Manual test per individual origin
+- **Auto-scan**: tests all auto-generated origins at once
+- Misconfiguration detection with severity: `critical` / `high` / `info`
+- Generated origins: subdomains, wildcard TLD, bypass chars (`%60`, `..`), `null`, `data:`, `file://`
+- Configurable method: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
+- Export results as `corskit_{timestamp}.txt`
+- No external dependencies — open directly in browser
+
+---
+
+## Usage
+
+### Option 1 — Open directly
 
 ```bash
 git clone https://github.com/theoffsecgirl/corskit.git
@@ -44,27 +46,27 @@ open cors_toolkit.html   # macOS
 xdg-open cors_toolkit.html  # Linux
 ```
 
-### Opción 2 — Servidor local (evita restricciones CORS del propio navegador)
+### Option 2 — Local server (avoids browser's own CORS restrictions)
 
 ```bash
 python3 -m http.server 8080
-# Abrir: http://localhost:8080/cors_toolkit.html
+# Open: http://localhost:8080/cors_toolkit.html
 ```
 
 ---
 
-## Archivo principal
+## Main file
 
-`cors_toolkit.html` — fichero único, todo autocontenido.
-
----
-
-## Uso ético
-
-Solo para bug bounty, laboratorios y auditorías autorizadas.
+`cors_toolkit.html` — single file, fully self-contained.
 
 ---
 
-## Licencia
+## Ethical use
+
+For bug bounty, labs and authorized audits only.
+
+---
+
+## License
 
 MIT · [theoffsecgirl](https://theoffsecgirl.com)
