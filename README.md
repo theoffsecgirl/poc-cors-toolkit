@@ -1,36 +1,47 @@
-<div align="center">
-
 # corskit
 
-**CORS misconfiguration tester — offensive web tool**
-
-![Language](https://img.shields.io/badge/HTML%20%2F%20JS-Browser-9E4AFF?style=flat-square&logo=javascript&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.1.0-9E4AFF?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-9E4AFF?style=flat-square)
-![Category](https://img.shields.io/badge/Category-Bug%20Bounty%20%7C%20Pentesting-111111?style=flat-square)
-
-*by [theoffsecgirl](https://github.com/theoffsecgirl)*
+CORS misconfiguration evaluator for manual testing in the browser.
 
 > 🇪🇸 [Versión en español](README.es.md)
-
-</div>
 
 ---
 
 ## What does it do?
 
-Web tool (pure HTML + JavaScript, no dependencies) to detect CORS misconfigurations in web endpoints. Allows testing a single endpoint, running an automatic scan of pre-generated origins, and visualizing results with severity classification.
+Browser-based tool (pure HTML + JavaScript, no dependencies) to help evaluate CORS behavior on web endpoints. It lets you test one endpoint, run an automatic origin sweep, inspect preflight responses, and review heuristic findings.
+
+Important: this is a **manual evaluation aid**, not a definitive vulnerability confirmer.
+
+---
+
+## What it is good for
+
+- Quick CORS triage on a specific endpoint
+- Comparing behavior across multiple candidate origins
+- Inspecting preflight `OPTIONS` responses
+- Reviewing raw response headers during manual validation
+- Building PoCs after you already suspect a CORS issue
+
+---
+
+## Important limitations
+
+- Browser behavior constrains what can be tested from client-side JavaScript
+- The `Origin` header is not fully user-controlled in normal browser execution
+- Heuristic severity (`critical`, `high`, `info`) is guidance, not proof of exploitability
+- A positive result still requires manual validation in the real attack context
 
 ---
 
 ## Features
 
-- Manual test per individual origin
-- **Auto-scan**: tests all auto-generated origins at once
-- Misconfiguration detection with severity: `critical` / `high` / `info`
-- Generated origins: subdomains, wildcard TLD, bypass chars (`%60`, `..`), `null`, `data:`, `file://`
+- Manual test per origin
+- Auto-scan across generated origins
+- Preflight `OPTIONS` testing
+- Heuristic severity classification
+- Generated origins: subdomains, wildcard-style variants, bypass chars, `null`, `data:`, `file://`
 - Configurable method: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
-- Export results as `corskit_{timestamp}.txt`
+- Export raw results as `corskit_{timestamp}.txt`
 - No external dependencies — open directly in browser
 
 ---
@@ -42,22 +53,32 @@ Web tool (pure HTML + JavaScript, no dependencies) to detect CORS misconfigurati
 ```bash
 git clone https://github.com/theoffsecgirl/corskit.git
 cd corskit
-open cors_toolkit.html   # macOS
-xdg-open cors_toolkit.html  # Linux
+open cors_toolkit.html
 ```
 
-### Option 2 — Local server (avoids browser's own CORS restrictions)
+### Option 2 — Local server
 
 ```bash
 python3 -m http.server 8080
 # Open: http://localhost:8080/cors_toolkit.html
 ```
 
+Running it from a local server is often more practical, but it does **not** remove the browser's CORS model or magically grant full control over `Origin` handling.
+
 ---
 
 ## Main file
 
-`cors_toolkit.html` — single file, fully self-contained.
+`cors_toolkit.html` — single self-contained file.
+
+---
+
+## Recommended workflow
+
+1. Suspect a CORS issue on a target endpoint
+2. Use corskit to compare multiple origins and inspect preflight responses
+3. Review raw headers and identify whether behavior is reflected, wildcarded or credentialed
+4. Validate manually with a real PoC before reporting
 
 ---
 
@@ -69,4 +90,4 @@ For bug bounty, labs and authorized audits only.
 
 ## License
 
-MIT · [theoffsecgirl](https://theoffsecgirl.com)
+MIT
