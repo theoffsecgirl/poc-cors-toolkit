@@ -1,72 +1,84 @@
-<div align="center">
-
 # corskit
 
-**CORS misconfiguration tester — herramienta web ofensiva**
-
-![Language](https://img.shields.io/badge/HTML%20%2F%20JS-Browser-9E4AFF?style=flat-square&logo=javascript&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.1.0-9E4AFF?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-9E4AFF?style=flat-square)
-![Category](https://img.shields.io/badge/Category-Bug%20Bounty%20%7C%20Pentesting-111111?style=flat-square)
-
-*by [theoffsecgirl](https://github.com/theoffsecgirl)*
+Herramienta de evaluación de CORS para uso manual en navegador.
 
 > 🇬🇧 [English version](README.md)
-
-</div>
 
 ---
 
 ## ¿Qué hace?
 
-Herramienta web (HTML + JavaScript puro, sin dependencias) para detectar misconfigurations CORS en endpoints web. Permite testear un endpoint único, lanzar un escaneo automático de origins precalculados y visualizar los resultados con clasificación de severidad.
+Herramienta web (HTML + JavaScript puro, sin dependencias) para ayudar a evaluar el comportamiento CORS de endpoints. Permite probar un endpoint, lanzar un barrido de origins, inspeccionar preflight y revisar findings heurísticos.
+
+Importante: es una **herramienta de apoyo**, no un verificador definitivo de vulnerabilidades.
+
+---
+
+## Para qué sirve realmente
+
+- Triage rápido de CORS en un endpoint
+- Comparar comportamiento entre distintos origins
+- Analizar respuestas preflight `OPTIONS`
+- Inspeccionar headers en pruebas manuales
+- Construir PoCs una vez identificado el problema
+
+---
+
+## Limitaciones importantes
+
+- El navegador limita lo que puede testearse desde JavaScript
+- La cabecera `Origin` no es totalmente controlable
+- La severidad (`critical`, `high`, `info`) es heurística
+- Un resultado positivo requiere validación manual real
 
 ---
 
 ## Funcionalidades
 
-- Test manual por origin individual
-- **Auto-scan**: prueba todos los origins generados automáticamente de una vez
-- Detección de misconfigurations con severidad: `critical` / `high` / `info`
-- Origins generados: subdominios, wildcard tld, bypass chars (`%60`, `..`), `null`, `data:`, `file://`
-- Método configurable: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
-- Exportación de resultados como `corskit_{timestamp}.txt`
-- Sin dependencias externas — abre directamente en el navegador
+- Test manual por origin
+- Auto-scan de múltiples origins
+- Pruebas preflight `OPTIONS`
+- Clasificación heurística
+- Generación de origins (subdominios, bypass, `null`, etc.)
+- Métodos configurables
+- Exportación en `.txt`
+- Sin dependencias externas
 
 ---
 
 ## Uso
 
-### Opción 1 — Abrir directo
-
 ```bash
 git clone https://github.com/theoffsecgirl/corskit.git
 cd corskit
-open cors_toolkit.html   # macOS
-xdg-open cors_toolkit.html  # Linux
+open cors_toolkit.html
 ```
 
-### Opción 2 — Servidor local (evita restricciones CORS del propio navegador)
+O con servidor local:
 
 ```bash
 python3 -m http.server 8080
-# Abrir: http://localhost:8080/cors_toolkit.html
 ```
+
+Nota: esto no elimina las restricciones CORS del navegador.
 
 ---
 
-## Archivo principal
+## Flujo recomendado
 
-`cors_toolkit.html` — fichero único, todo autocontenido.
+1. Detectar sospecha de CORS
+2. Usar corskit para comparar origins
+3. Analizar headers y preflight
+4. Validar manualmente antes de reportar
 
 ---
 
 ## Uso ético
 
-Solo para bug bounty, laboratorios y auditorías autorizadas.
+Solo para entornos autorizados.
 
 ---
 
 ## Licencia
 
-MIT · [theoffsecgirl](https://theoffsecgirl.com)
+MIT
