@@ -99,7 +99,7 @@
 
   <h1>corskit</h1>
   <div class="subtitle">
-    v1.2.0 · CORS misconfiguration auditor ·
+    v1.3.0 · CORS misconfiguration auditor ·
     by <a href="https://theoffsecgirl.com" style="color:var(--accent);text-decoration:none">theoffsecgirl</a>
   </div>
 
@@ -220,6 +220,42 @@
         'file://',
         'data:text/html',
       ];
+
+      // Bypass de regex con punto sin escapar: si el backend valida el Origin con
+      // algo como /^api.example.com$/ (sin escapar el punto), ese "." del regex
+      // matchea CUALQUIER caracter, no solo el punto literal. Sustituyendo el punto
+      // entre el primer label y el resto del host por otro caracter (aqui "X") cuela
+      // igual. Es el bypass de CORS mas citado en writeups reales (James Kettle /
+      // PortSwigger) y no estaba cubierto por la lista anterior.
+      if (parts.length >= 2) {
+        origins.push(`${proto}//${parts[0]}X${parts.slice(1).join('.')}`);
+      }
+
+      // Case-sensitivity: algunos backends comparan el Origin contra el host
+      // esperado con un string compare case-sensitive mal planteado, o normalizan
+      // el host en un punto del codigo pero no en el check de CORS. Un origin con
+      // capitalizacion distinta puede colarse por esa inconsistencia.
+      const caseVariantHost = host
+        .replace(/^[a-z]/, c => c.toUpperCase())
+        .replace(/\.([a-z]+)$/, (m, tld) => '.' + tld.toUpperCase());
+      if (caseVariantHost !== host) {
+        origins.push(`${proto}//${caseVariantHost}`);
+      }
+
+      // Puerto no estandar: el Origin header SIEMPRE incluye el puerto si no es el
+      // default del esquema, pero muchas validaciones de origin solo comparan el
+      // host y lo ignoran. Un atacante puede levantar un listener en :4443/:8443 y
+      // colarse si el check no compara el origin completo.
+      origins.push(`${proto}//${host}:4443`);
+      origins.push(`${proto}//${host}:8443`);
+
+      // Downgrade de esquema: si el target es https, prueba tambien el mismo host
+      // por http. Si el backend valida solo el host e ignora el esquema, un origin
+      // http (atacable via red local / MITM, sin el aislamiento de https) podria
+      // ser aceptado igual que el https legitimo.
+      if (proto === 'https:') {
+        origins.push(`http://${host}`);
+      }
 
       const sel = document.getElementById('origin');
       sel.innerHTML = '';
@@ -517,6 +553,64 @@
     }
   }
 
+  // ---------- Pool de concurrencia ----------
+
+  // Numero maximo de requests simultaneos en los auto-scans. Un scan totalmente
+  // paralelo (todos los origins/URLs a la vez) contra un target real puede parecer
+  // fuerza bruta y disparar rate-limiting o un WAF; 2-3 en vuelo da solape de
+  // latencia sin ser agresivo.
+  const CONCURRENCY_LIMIT = 3;
+
+  // Ejecuta `worker(item)` sobre cada elemento de `items` con como maximo `limit`
+  // tareas en vuelo a la vez. `onResult(item, result)` se llama en cuanto cada
+  // tarea individual termina -- en el orden en que van completando, no
+  // necesariamente el orden de `items`. Cada `result` llega ya resuelto entero
+  // (nunca a medias), asi que concatenar su texto en el output sigue siendo
+  // legible aunque el orden entre origins/URLs varie respecto a la version secuencial.
+  async function runPool(items, limit, worker, onResult) {
+    let idx = 0;
+    async function runNext() {
+      while (idx < items.length) {
+        const current = idx++;
+        const result = await worker(items[current]);
+        onResult(items[current], result);
+      }
+    }
+    const runners = Array.from({ length: Math.min(limit, items.length) }, runNext);
+    await Promise.all(runners);
+  }
+
+  // ---------- Cruce: preflight bloqueado x request simple ----------
+
+  // Que el preflight OPTIONS sea rechazado (network error, 403, 405) NO significa
+  // que el handler principal este bien configurado -- solo significa que el
+  // navegador nunca llega a mandar el request real. Muchos backends solo protegen
+  // (o solo implementan) la ruta OPTIONS y el handler GET/POST/etc. real sigue
+  // respondiendo con cabeceras CORS abiertas si se le pega directamente (curl, o
+  // cualquier origin/metodo que no dispare preflight). Esta funcion dispara ese
+  // request simple para confirmar o descartar la sospecha.
+  async function checkCrossedPreflightBypass(url, origin, requestedMethod, auth, body) {
+    const { text, findings } = await doFetch(url, origin, requestedMethod, auth, body);
+    const label = `[CRUCE] Preflight bloqueado -> confirmando con request simple (${requestedMethod}, sin preflight):\n`;
+
+    const exploitable = findings.filter(f => f.level === 'critical' || f.level === 'high');
+    if (exploitable.length === 0) {
+      return { text: label + text, findings: [] };
+    }
+
+    const worst = exploitable.some(f => f.level === 'critical') ? 'critical' : 'high';
+    const crossed = {
+      level: worst,
+      title: '[CRUZADO] Preflight bloqueado pero handler principal vulnerable',
+      detail: `El preflight OPTIONS para este origin fue bloqueado, pero un request ${requestedMethod} `
+            + `directo (sin preflight) al mismo endpoint revela CORS mal configurado igualmente:\n`
+            + exploitable.map(f => `- ${f.title}: ${f.detail.split('\n')[0]}`).join('\n')
+            + `\nURL: ${url} | Origin: ${origin}`,
+      preflight: true
+    };
+    return { text: label + text, findings: [crossed] };
+  }
+
   // ---------- Acciones ----------
 
   async function testCORS() {
@@ -546,15 +640,15 @@
     results.length = 0;
 
     const allFindings = [];
-    for (const origin of origins) {
-      const { text, findings } = await doFetch(url, origin, method, auth, body);
+    await runPool(origins, CONCURRENCY_LIMIT, origin => doFetch(url, origin, method, auth, body), (origin, { text, findings }) => {
       out.innerText += text;
       allFindings.push(...findings);
-    }
+    });
     const seen = new Set();
     renderFindings(allFindings.filter(f => {
-      if (seen.has(f.title)) return false;
-      seen.add(f.title); return true;
+      const k = f.title + f.detail;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
     }));
   }
 
@@ -571,11 +665,10 @@
     results.length = 0;
 
     const allFindings = [];
-    for (const url of urls) {
-      const { text, findings } = await doFetch(url, origin, method, auth, body);
+    await runPool(urls, CONCURRENCY_LIMIT, url => doFetch(url, origin, method, auth, body), (url, { text, findings }) => {
       out.innerText += text;
       allFindings.push(...findings);
-    }
+    });
     const seen = new Set();
     renderFindings(allFindings.filter(f => {
       const k = f.title + f.detail;
@@ -590,13 +683,25 @@
     const requestedMethod  = document.getElementById('preflightMethod').value;
     const requestedHeaders = document.getElementById('preflightHeaders').value;
     const timeoutMs        = parseInt(document.getElementById('preflightTimeout').value) || 8000;
+    const auth             = document.getElementById('auth').value;
+    const body             = document.getElementById('body').value;
 
     document.getElementById('preflightOutput').innerText = 'Ejecutando preflight OPTIONS…';
     document.getElementById('preflightFindings').innerHTML = '';
 
     const { text, findings } = await doPreflight(url, origin, requestedMethod, requestedHeaders, timeoutMs);
-    document.getElementById('preflightOutput').innerText = text;
-    renderPreflightFindings(findings);
+    let allFindings = findings;
+    let fullText = text;
+
+    const blocked = findings.some(f => f.title.startsWith('Preflight bloqueado'));
+    if (blocked) {
+      const cross = await checkCrossedPreflightBypass(url, origin, requestedMethod, auth, body);
+      fullText += cross.text;
+      allFindings = allFindings.concat(cross.findings);
+    }
+
+    document.getElementById('preflightOutput').innerText = fullText;
+    renderPreflightFindings(allFindings);
   }
 
   async function testPreflightAutoAll() {
@@ -605,16 +710,32 @@
     const requestedHeaders = document.getElementById('preflightHeaders').value;
     const timeoutMs        = parseInt(document.getElementById('preflightTimeout').value) || 8000;
     const origins          = [...document.getElementById('origin').options].map(o => o.value);
+    const auth             = document.getElementById('auth').value;
+    const body             = document.getElementById('body').value;
 
     document.getElementById('preflightOutput').innerText = 'Preflight auto-scan en curso…\n';
     document.getElementById('preflightFindings').innerHTML = '';
 
     const allFindings = [];
-    for (const origin of origins) {
-      const { text, findings } = await doPreflight(url, origin, requestedMethod, requestedHeaders, timeoutMs);
-      document.getElementById('preflightOutput').innerText += text;
-      allFindings.push(...findings);
-    }
+    await runPool(
+      origins,
+      CONCURRENCY_LIMIT,
+      async origin => {
+        const preflightResult = await doPreflight(url, origin, requestedMethod, requestedHeaders, timeoutMs);
+        const blocked = preflightResult.findings.some(f => f.title.startsWith('Preflight bloqueado'));
+        if (!blocked) return preflightResult;
+
+        const cross = await checkCrossedPreflightBypass(url, origin, requestedMethod, auth, body);
+        return {
+          text: preflightResult.text + cross.text,
+          findings: preflightResult.findings.concat(cross.findings)
+        };
+      },
+      (origin, { text, findings }) => {
+        document.getElementById('preflightOutput').innerText += text;
+        allFindings.push(...findings);
+      }
+    );
     const seen = new Set();
     renderPreflightFindings(allFindings.filter(f => {
       const k = f.title + f.detail;

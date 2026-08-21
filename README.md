@@ -5,7 +5,7 @@
 **CORS misconfiguration tester — offensive web tool**
 
 ![Language](https://img.shields.io/badge/HTML%20%2F%20JS-Browser-9E4AFF?style=flat-square&logo=javascript&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.1.0-9E4AFF?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.3.0-9E4AFF?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-9E4AFF?style=flat-square)
 ![Category](https://img.shields.io/badge/Category-Bug%20Bounty%20%7C%20Pentesting-111111?style=flat-square)
 
